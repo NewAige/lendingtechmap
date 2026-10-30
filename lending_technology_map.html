@@ -323,7 +323,7 @@ const NODES = [
 
   // ── Construction (own box, lower left) ──
   { id:"built",       name:"Built",            type:"Construction mgmt",  tag:"SHARED",  icon:"BU", kind:"construction", unit:["construction", "commercial", "residential"],
-    x:530,  y:450,  desc:"Construction loan management, shared by commercial and residential lending. Receives data from COCC (one-way)." },
+    x:530,  y:450,  desc:"Construction loan management, shared by commercial and residential lending. Receives data from COCC (one-way). Has an API connection to VeraPath that is not active yet." },
 
   // ── Residential mortgage (right of core) ──
   { id:"elink",       name:"eLink",            type:"Integration",        icon:"↔", kind:"integration", unit:"residential",
@@ -331,7 +331,7 @@ const NODES = [
   { id:"encompass",   name:"Encompass",        type:"Mortgage hub",       tag:"HUB",     icon:"EN", kind:"mortgage", unit:"residential",
     x:1860, y:820,  desc:"Residential mortgage loan origination platform and hub for the mortgage integrations. Reaches COCC through eLink. API connection to VeraPath is configured (OpenAPI) but not active." },
   { id:"verapath",    name:"VeraPath",         type:"Central AI provider", tag:"AI",     icon:"VP", kind:"ai", unit:"ai",
-    x:1890, y:1500, desc:"The bank's central AI provider. DecisionLender and Encompass both have OpenAPI configurations for connecting to VeraPath by API, and COCC has a planned API read connection. None of these are active yet." },
+    x:1890, y:1500, desc:"The bank's central AI provider. DecisionLender and Encompass both have OpenAPI configurations for connecting to VeraPath by API, Built has an API connection, and COCC has a planned API read connection. None of these are active yet." },
   { id:"tpo",         name:"TPO Connect",      type:"Integration",        icon:"↔", kind:"integration", unit:"residential",
     x:2190, y:570,  desc:"Integration connected to Encompass only." },
   { id:"consumer",    name:"Consumer Connect", type:"Integration",        icon:"↔", kind:"integration", unit:"residential",
@@ -405,6 +405,7 @@ const EDGES = [
   { from:"encompass",      to:"verapath",    flow:"inactive", note:"API · OpenAPI config ready", c1:[-60, 300], c2:[-80, -200] },
   { from:"cocc",           to:"verapath",    flow:"inactive", note:"API read · not active", c1:[420, 40], c2:[-420, -160] },
   { from:"decisionlender", to:"verapath",    flow:"inactive", note:"API · OpenAPI config ready" },
+  { from:"built",          to:"verapath",    flow:"inactive", note:"API · not active" },
   { from:"enact",          to:"encompass",   flow:"one" },
   { from:"mgic",           to:"encompass",   flow:"one" },
   { from:"oldrepublic",    to:"encompass",   flow:"one",  manual:true }

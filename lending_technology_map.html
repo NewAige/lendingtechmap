@@ -33,7 +33,7 @@ body{background:radial-gradient(ellipse at 50% 50%,#122541 0%,#091524 48%,#050b1
 .top-right{display:flex;align-items:center;gap:18px}
 .live{font-size:11px;color:#9bb1c7;letter-spacing:.08em;text-transform:uppercase}
 .live i{display:inline-block;width:7px;height:7px;background:#65efbd;border-radius:50%;margin-right:7px;box-shadow:0 0 10px #65efbd}
-.btn{background:#ffffff08;border:1px solid #ffffff1c;color:#c5d7e9;padding:9px 12px;border-radius:9px;font-size:12px;cursor:pointer;transition:border-color .2s,color .2s,background .2s;font-family:inherit}
+.btn{white-space:nowrap;background:#ffffff08;border:1px solid #ffffff1c;color:#c5d7e9;padding:9px 12px;border-radius:9px;font-size:12px;cursor:pointer;transition:border-color .2s,color .2s,background .2s;font-family:inherit}
 .btn:hover,.btn:focus-visible{border-color:#65e8db;color:#fff;background:#65e8db13;outline:none}
 
 /* Stage */
@@ -140,6 +140,18 @@ svg.layer{position:absolute;left:0;top:0;overflow:visible;pointer-events:none}
 .conn-note{display:block;font-size:10px;color:#8aa1b6;margin-top:3px}
 .conn-note.warn{color:var(--ec)}
 
+/* Business unit filter */
+.filters{position:absolute;z-index:4;top:100px;left:32px;right:380px;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.filter-label{font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#758da4;margin-right:4px;font-weight:600}
+.chip{display:inline-flex;align-items:center;gap:7px;padding:6px 11px;border-radius:20px;border:1px solid #ffffff1c;background:#0a1726cc;color:#a9bdd0;font-family:inherit;font-size:11px;cursor:pointer;white-space:nowrap;transition:border-color .2s,color .2s,background .2s}
+.chip i{width:8px;height:8px;border-radius:50%;background:var(--sw);box-shadow:0 0 6px var(--sw)}
+.chip:hover,.chip:focus-visible{border-color:#65e8db;color:#fff;outline:none}
+.chip[aria-pressed="true"]{border-color:#65e8dbaa;color:#fff;background:#65e8db1f}
+.node.filtered-out,.lane-group.filtered-out{display:none}
+.node.ghost{opacity:.38}
+.edge.filtered-out{visibility:hidden}
+.lane-group{transition:opacity .25s}
+
 /* Legend / controls / footer */
 .legend{position:absolute;bottom:22px;left:32px;display:flex;gap:16px;align-items:center;color:#91a7bc;font-size:10px;z-index:3;flex-wrap:wrap;pointer-events:none}
 .legend-item{display:flex;align-items:center;gap:7px}
@@ -158,6 +170,10 @@ footer{height:31px;flex-shrink:0;border-top:1px solid #ffffff0d;padding:0 32px;d
   .topbar{padding:0 16px;height:64px}.live{display:none}
   .heading{left:16px;top:14px}.heading h1{font-size:18px}.heading p{display:none}
   .hint{display:none}
+  .btn-text,.filter-label{display:none}
+  .filters{left:16px;right:16px;top:62px;flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
+  .filters::-webkit-scrollbar{display:none}
+  .brand-sub{display:none}
   .panel{right:12px;left:12px;width:auto;top:auto;bottom:60px;max-height:55%;transform:translateY(14px)}
   .panel.open{transform:translateY(0)}
   .legend{left:16px;right:110px;bottom:16px;gap:6px 10px}.legend .opt,.legend-sep{display:none}
@@ -176,10 +192,11 @@ footer{height:31px;flex-shrink:0;border-top:1px solid #ffffff0d;padding:0 32px;d
 <div class="app">
   <header class="topbar">
     <div class="brand"><div class="logo">✳</div><div><div class="brand-title">Integration Atlas</div><div class="brand-sub">Lending technology map</div></div></div>
-    <div class="top-right"><div class="live"><i></i>Network view</div><button class="btn" id="reset" title="Reset zoom, pan and node positions">⌂ &nbsp;Reset view</button></div>
+    <div class="top-right"><div class="live"><i></i>Network view</div><button class="btn" id="download" aria-label="Download map" title="Download this map as a single HTML file you can open offline or share">⤓<span class="btn-text"> &nbsp;Download</span></button><button class="btn" id="reset" aria-label="Reset view" title="Reset filters, zoom, pan and node positions">⌂<span class="btn-text"> &nbsp;Reset view</span></button></div>
   </header>
   <main>
     <div class="heading"><div class="eyebrow">Systems landscape / 01</div><h1>Lending technology map</h1><p>Consumer, indirect, small business, commercial and residential lending around the core and their integrations.</p></div>
+    <div class="filters" id="filters" role="group" aria-label="Filter by business unit"><span class="filter-label">Business unit</span></div>
     <div class="hint">CLICK A NODE TO EXPLORE &nbsp;·&nbsp; DRAG TO PAN OR MOVE NODES &nbsp;·&nbsp; SCROLL TO ZOOM</div>
     <div class="canvas" id="canvas">
       <div class="grid"></div>
@@ -231,106 +248,111 @@ footer{height:31px;flex-shrink:0;border-top:1px solid #ffffff0d;padding:0 32px;d
 (() => {
 "use strict";
 
+// Snapshot the untouched page before the script builds the map, so Download
+// works even when the file is opened locally (file://) where fetch is blocked.
+const PAGE_SOURCE = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
+
 /* ============================================================
    DATA — edit this section to add systems and connections.
    x / y are positions in the W × H world.
    kind: core | mortgage | commercial | integration
+   unit: business unit(s) used by the filter bar, see UNITS below
    ============================================================ */
 const W = 2440, H = 1780;   // COCC sits at the centre (1220, 820)
 
 const NODES = [
   // ── Core banking (centre) ──
-  { id:"cocc",        name:"COCC",             type:"Bank core",          tag:"CORE",    icon:"CO", kind:"core",
+  { id:"cocc",        name:"COCC",             type:"Bank core",          tag:"CORE",    icon:"CO", kind:"core", unit:"core",
     x:1220, y:820,  desc:"Core banking platform and system of record for the bank. An API read connection to VeraPath is planned but not active." },
-  { id:"identifi",    name:"iDentifi",         type:"Cold storage",       tag:"ARCHIVE", icon:"iD", kind:"storage",
+  { id:"identifi",    name:"iDentifi",         type:"Cold storage",       tag:"ARCHIVE", icon:"iD", kind:"storage", unit:"core",
     x:1350, y:1020, desc:"Cold storage. Receives data from Encompass, Numerated and DecisionLender, receives LaserPro documents through manual imaging, and exchanges data with COCC." },
 
   // ── Consumer lending (above core) ──
-  { id:"loanwriter",  name:"LoanWriter",       type:"Consumer hub",       tag:"HUB",     icon:"LW", kind:"consumer",
+  { id:"loanwriter",  name:"LoanWriter",       type:"Consumer hub",       tag:"HUB",     icon:"LW", kind:"consumer", unit:"consumer",
     x:760,  y:1440, desc:"Consumer lending hub. Has a built-in point of sale, receives credit data from TransUnion, connects directly to COCC, and receives wholesale loans through a manual process." },
-  { id:"wholesale",   name:"Wholesale lender", type:"Wholesale",          icon:"✋", kind:"integration",
+  { id:"wholesale",   name:"Wholesale lender", type:"Wholesale",          icon:"✋", kind:"integration", unit:"consumer",
     x:470,  y:1440, desc:"Wholesale lending. Data flows to LoanWriter through a manual process (one-way). Not connected to DecisionLender." },
-  { id:"transunion",  name:"TransUnion",       type:"Credit bureau",      icon:"TU", kind:"integration",
+  { id:"transunion",  name:"TransUnion",       type:"Credit bureau",      icon:"TU", kind:"integration", unit:"consumer",
     x:650,  y:1270, desc:"Sends data to LoanWriter (one-way)." },
-  { id:"lwpos",       name:"LoanWriter POS",   type:"Point of sale (built-in)", icon:"PS", kind:"integration",
+  { id:"lwpos",       name:"LoanWriter POS",   type:"Point of sale (built-in)", icon:"PS", kind:"integration", unit:"consumer",
     x:720,  y:1640, desc:"Point of sale built into LoanWriter. Data flows both ways." },
 
   // ── Small business lending (above core) ──
-  { id:"numerated",   name:"Numerated",        type:"Small business hub", tag:"HUB",     icon:"NU", kind:"smallbiz",
+  { id:"numerated",   name:"Numerated",        type:"Small business hub", tag:"HUB",     icon:"NU", kind:"smallbiz", unit:"smallbiz",
     x:1220, y:560,  desc:"Small business lending hub. Receives data from LexisNexis, Dun & Bradstreet and Experian, exchanges data with DocuSign, sends data to iDentifi, and reaches COCC through a manual process." },
-  { id:"docusign",    name:"DocuSign",         type:"E-signature",        icon:"DS", kind:"integration",
+  { id:"docusign",    name:"DocuSign",         type:"E-signature",        icon:"DS", kind:"integration", unit:"smallbiz",
     x:1010, y:560,  desc:"E-signature. Exchanges data with Numerated (bidirectional)." },
-  { id:"lexisnexis",  name:"LexisNexis",       type:"Data provider",      icon:"LN", kind:"integration",
+  { id:"lexisnexis",  name:"LexisNexis",       type:"Data provider",      icon:"LN", kind:"integration", unit:"smallbiz",
     x:1030, y:330,  desc:"Sends data to Numerated (one-way)." },
-  { id:"dnb",         name:"Dun & Bradstreet", type:"Business credit",    icon:"DB", kind:"integration",
+  { id:"dnb",         name:"Dun & Bradstreet", type:"Business credit",    icon:"DB", kind:"integration", unit:"smallbiz",
     x:1220, y:330,  desc:"Sends data to Numerated (one-way)." },
-  { id:"experiansb",  name:"Experian",         type:"Credit bureau",      icon:"EX", kind:"integration",
+  { id:"experiansb",  name:"Experian",         type:"Credit bureau",      icon:"EX", kind:"integration", unit:"smallbiz",
     x:1410, y:330,  desc:"Sends data to Numerated (one-way). Shown separately from the indirect lending Experian connection." },
 
   // ── Indirect lending (below core) ──
-  { id:"decisionlender", name:"DecisionLender", type:"Indirect hub",     tag:"HUB",     icon:"DL", kind:"indirect",
+  { id:"decisionlender", name:"DecisionLender", type:"Indirect hub",     tag:"HUB",     icon:"DL", kind:"indirect", unit:"indirect",
     x:1220, y:1440, desc:"Indirect lending hub. Exchanges data with DealerTrack Tech and RouteOne, receives credit data from Experian, Equifax and TransUnion, sends data one-way to iDentifi, has an inactive API connection to VeraPath (OpenAPI config ready), and sends data one-way to its LenderLink instance, which passes it on to COCC." },
-  { id:"dealertrack",    name:"DealerTrack Tech", type:"Dealer platform", icon:"DT", kind:"integration",
+  { id:"dealertrack",    name:"DealerTrack Tech", type:"Dealer platform", icon:"DT", kind:"integration", unit:"indirect",
     x:1000, y:1320, desc:"Dealer platform. Exchanges data with DecisionLender (bidirectional)." },
-  { id:"routeone",       name:"RouteOne",       type:"Dealer platform",   icon:"R1", kind:"integration",
+  { id:"routeone",       name:"RouteOne",       type:"Dealer platform",   icon:"R1", kind:"integration", unit:"indirect",
     x:1440, y:1320, desc:"Dealer platform. Exchanges data with DecisionLender (bidirectional)." },
-  { id:"experian",       name:"Experian",       type:"Credit bureau",     icon:"EX", kind:"integration",
+  { id:"experian",       name:"Experian",       type:"Credit bureau",     icon:"EX", kind:"integration", unit:"indirect",
     x:1010, y:1640, desc:"Sends data to DecisionLender (one-way)." },
-  { id:"equifax",        name:"Equifax",        type:"Credit bureau",     icon:"EQ", kind:"integration",
+  { id:"equifax",        name:"Equifax",        type:"Credit bureau",     icon:"EQ", kind:"integration", unit:"indirect",
     x:1220, y:1640, desc:"Sends data to DecisionLender (one-way)." },
-  { id:"transunioni",    name:"TransUnion",     type:"Credit bureau",     icon:"TU", kind:"integration",
+  { id:"transunioni",    name:"TransUnion",     type:"Credit bureau",     icon:"TU", kind:"integration", unit:"indirect",
     x:1430, y:1640, desc:"Sends data to DecisionLender (one-way). Shown separately from the consumer lending TransUnion connection." },
-  { id:"lenderlinki", name:"LenderLink",       type:"Middleware · indirect", icon:"LL", kind:"integration",
+  { id:"lenderlinki", name:"LenderLink",       type:"Middleware · indirect", icon:"LL", kind:"integration", unit:"indirect",
     x:1170, y:1220, desc:"Indirect lending's LenderLink instance (separate from commercial). Carries DecisionLender data into COCC (one-way)." },
 
   // ── Commercial lending (left of core) ──
-  { id:"globalwave",  name:"Global Wave",      type:"Commercial hub",     tag:"HUB",     icon:"GW", kind:"commercial",
+  { id:"globalwave",  name:"Global Wave",      type:"Commercial hub",     tag:"HUB",     icon:"GW", kind:"commercial", unit:"commercial",
     x:320,  y:870,  desc:"Commercial lending hub. Many commercial processes are manual. Receives CoStar, Warren Group and Xactus (credit reports, flood certs) data manually, exchanges data with ValueLink manually, and data reaches LaserPro for loan documents through a manual step." },
-  { id:"costar",      name:"CoStar",           type:"Data source",        icon:"✋", kind:"integration",
+  { id:"costar",      name:"CoStar",           type:"Data source",        icon:"✋", kind:"integration", unit:"commercial",
     x:320,  y:765,  desc:"Commercial real estate data. Reaches Global Wave through a manual process (one-way)." },
-  { id:"xactusc",     name:"Xactus",           type:"Credit & flood",     icon:"✋", kind:"integration",
+  { id:"xactusc",     name:"Xactus",           type:"Credit & flood",     icon:"✋", kind:"integration", unit:"commercial",
     x:560,  y:760,  desc:"Commercial: credit reports and flood certs. Reaches Global Wave through a manual process (one-way). Same vendor as the residential Xactus integration." },
-  { id:"valuelinkc",  name:"ValueLink",        type:"Appraisal mgmt",     icon:"✋", kind:"integration",
+  { id:"valuelinkc",  name:"ValueLink",        type:"Appraisal mgmt",     icon:"✋", kind:"integration", unit:"commercial",
     x:560,  y:880,  desc:"Appraisal management software. Manual process with Global Wave, data flowing both ways. Same vendor as the residential ValueLink integration." },
-  { id:"warren",      name:"Warren Group",     type:"Data source",        icon:"✋", kind:"integration",
+  { id:"warren",      name:"Warren Group",     type:"Data source",        icon:"✋", kind:"integration", unit:"commercial",
     x:330,  y:1010, desc:"Real estate and property data. Reaches Global Wave through a manual process (one-way)." },
-  { id:"laserpro",    name:"LaserPro",         type:"Loan documents",     icon:"LP", kind:"integration",
+  { id:"laserpro",    name:"LaserPro",         type:"Loan documents",     icon:"LP", kind:"integration", unit:"commercial",
     x:580,  y:1030, desc:"Commercial loan documents. Receives data from Global Wave (manual), sends data to LenderLink, and documents reach iDentifi through manual imaging." },
-  { id:"lenderlinkc", name:"LenderLink",       type:"Middleware · commercial", icon:"LL", kind:"integration",
+  { id:"lenderlinkc", name:"LenderLink",       type:"Middleware · commercial", icon:"LL", kind:"integration", unit:"commercial",
     x:820,  y:780,  desc:"Commercial lending's LenderLink instance (separate from indirect). Carries LaserPro data into COCC (one-way)." },
 
   // ── Construction (own box, lower left) ──
-  { id:"built",       name:"Built",            type:"Construction mgmt",  tag:"SHARED",  icon:"BU", kind:"construction",
+  { id:"built",       name:"Built",            type:"Construction mgmt",  tag:"SHARED",  icon:"BU", kind:"construction", unit:["construction", "commercial", "residential"],
     x:530,  y:450,  desc:"Construction loan management, shared by commercial and residential lending. Receives data from COCC (one-way)." },
 
   // ── Residential mortgage (right of core) ──
-  { id:"elink",       name:"eLink",            type:"Integration",        icon:"↔", kind:"integration",
+  { id:"elink",       name:"eLink",            type:"Integration",        icon:"↔", kind:"integration", unit:"residential",
     x:1630, y:820,  desc:"Integration connecting Encompass and COCC." },
-  { id:"encompass",   name:"Encompass",        type:"Mortgage hub",       tag:"HUB",     icon:"EN", kind:"mortgage",
+  { id:"encompass",   name:"Encompass",        type:"Mortgage hub",       tag:"HUB",     icon:"EN", kind:"mortgage", unit:"residential",
     x:1860, y:820,  desc:"Residential mortgage loan origination platform and hub for the mortgage integrations. Reaches COCC through eLink. API connection to VeraPath is configured (OpenAPI) but not active." },
-  { id:"verapath",    name:"VeraPath",         type:"Central AI provider", tag:"AI",     icon:"VP", kind:"ai",
+  { id:"verapath",    name:"VeraPath",         type:"Central AI provider", tag:"AI",     icon:"VP", kind:"ai", unit:"ai",
     x:1890, y:1500, desc:"The bank's central AI provider. DecisionLender and Encompass both have OpenAPI configurations for connecting to VeraPath by API, and COCC has a planned API read connection. None of these are active yet." },
-  { id:"tpo",         name:"TPO Connect",      type:"Integration",        icon:"↔", kind:"integration",
+  { id:"tpo",         name:"TPO Connect",      type:"Integration",        icon:"↔", kind:"integration", unit:"residential",
     x:2190, y:570,  desc:"Integration connected to Encompass only." },
-  { id:"consumer",    name:"Consumer Connect", type:"Integration",        icon:"↔", kind:"integration",
+  { id:"consumer",    name:"Consumer Connect", type:"Integration",        icon:"↔", kind:"integration", unit:"residential",
     x:2190, y:670,  desc:"Integration connected to Encompass only." },
-  { id:"xactus",      name:"Xactus",           type:"Credit & verification", icon:"↔", kind:"integration",
+  { id:"xactus",      name:"Xactus",           type:"Credit & verification", icon:"↔", kind:"integration", unit:"residential",
     x:2190, y:770,  desc:"Residential: credit reports, flood certs, fraud reports, credit monitoring and verification of employment. Exchanges data with Encompass. A separate commercial connection to Global Wave is shown in Commercial lending." },
-  { id:"valuelink",   name:"ValueLink",        type:"Appraisal mgmt",     icon:"↔", kind:"integration",
+  { id:"valuelink",   name:"ValueLink",        type:"Appraisal mgmt",     icon:"↔", kind:"integration", unit:"residential",
     x:2190, y:870,  desc:"Appraisal management software. Exchanges data with Encompass. A separate manual connection to Global Wave is shown in Commercial lending." },
-  { id:"xactusavm",   name:"Xactus (AVM)",     type:"AVM",                icon:"✋", kind:"integration",
+  { id:"xactusavm",   name:"Xactus (AVM)",     type:"AVM",                icon:"✋", kind:"integration", unit:"residential",
     x:2190, y:970,  desc:"Automated valuation through Xactus. Manual process with data flowing both ways." },
-  { id:"alacriti",    name:"Alacriti",         type:"Appraisal payments", icon:"✋", kind:"integration",
+  { id:"alacriti",    name:"Alacriti",         type:"Appraisal payments", icon:"✋", kind:"integration", unit:"residential",
     x:2190, y:1070, desc:"Appraisal payments. Manual process with data flowing both ways." },
-  { id:"fannie",      name:"Fannie Mae",       type:"Investor / GSE",     icon:"→", kind:"integration",
+  { id:"fannie",      name:"Fannie Mae",       type:"Investor / GSE",     icon:"→", kind:"integration", unit:"residential",
     x:1760, y:440,  desc:"Receives data from Encompass (one-way)." },
-  { id:"freddie",     name:"Freddie Mac",      type:"Investor / GSE",     icon:"→", kind:"integration",
+  { id:"freddie",     name:"Freddie Mac",      type:"Investor / GSE",     icon:"→", kind:"integration", unit:"residential",
     x:1970, y:440,  desc:"Receives data from Encompass (one-way)." },
-  { id:"enact",       name:"Enact MI",         type:"Mortgage insurance", icon:"→", kind:"integration",
+  { id:"enact",       name:"Enact MI",         type:"Mortgage insurance", icon:"→", kind:"integration", unit:"residential",
     x:1700, y:1200, desc:"Sends data to Encompass (one-way)." },
-  { id:"mgic",        name:"MGIC",             type:"Mortgage insurance", icon:"→", kind:"integration",
+  { id:"mgic",        name:"MGIC",             type:"Mortgage insurance", icon:"→", kind:"integration", unit:"residential",
     x:1930, y:1200, desc:"Sends data to Encompass (one-way)." },
-  { id:"oldrepublic", name:"Old Republic",     type:"Mortgage insurance", icon:"✋", kind:"integration",
+  { id:"oldrepublic", name:"Old Republic",     type:"Mortgage insurance", icon:"✋", kind:"integration", unit:"residential",
     x:2120, y:1200, desc:"Mortgage insurance. Data reaches Encompass through a manual process." }
 ];
 
@@ -399,20 +421,32 @@ const edgeColor = e => e.manual ? MANUAL_COLOR : FLOW[e.flow].color;
 
 // Lanes are the shaded boxes around each business unit
 const LANES = [
-  { label:"Small business lending",        x:920,  y:170,  w:580, h:490 },
-  { label:"Core banking",                  x:1050, y:710,  w:430, h:370 },
-  { label:"Consumer & indirect lending",   x:330,  y:1160, w:1200, h:560 },
-  { label:"Commercial lending",            x:180,  y:700,  w:820, h:420 },
-  { label:"Construction",                  x:180,  y:350,  w:700, h:200 },
-  { label:"Residential mortgage lending",  x:1540, y:360,  w:860, h:910 },
-  { label:"AI platform",                   x:1690, y:1360, w:400, h:280 }
+  { label:"Small business lending",        x:920,  y:170,  w:580, h:490, units:["smallbiz"] },
+  { label:"Core banking",                  x:1050, y:710,  w:430, h:370, units:["core"] },
+  { label:"Consumer & indirect lending",   x:330,  y:1160, w:1200, h:560, units:["consumer", "indirect"] },
+  { label:"Commercial lending",            x:180,  y:700,  w:820, h:420, units:["commercial"] },
+  { label:"Construction",                  x:180,  y:350,  w:700, h:200, units:["construction"] },
+  { label:"Residential mortgage lending",  x:1540, y:360,  w:860, h:910, units:["residential"] },
+  { label:"AI platform",                   x:1690, y:1360, w:400, h:280, units:["ai"] }
 ];
 
 const CAPTIONS = [
-  { text:"Investors",            x:1865, y:398 },
-  { text:"Partner integrations", x:2190, y:526 },
-  { text:"Mortgage insurance",   x:1910, y:1252 },
-  { text:"Credit bureaus",       x:1220, y:1700 }
+  { text:"Investors",            x:1865, y:398, units:["residential"] },
+  { text:"Partner integrations", x:2190, y:526, units:["residential"] },
+  { text:"Mortgage insurance",   x:1910, y:1252, units:["residential"] },
+  { text:"Credit bureaus",       x:1220, y:1700, units:["indirect"] }
+];
+
+// Business units for the filter bar. A node can belong to several (e.g. Built).
+const UNITS = [
+  { id:"consumer",     label:"Consumer",       color:"var(--cons-hub-a)" },
+  { id:"indirect",     label:"Indirect",       color:"var(--ind-a)" },
+  { id:"smallbiz",     label:"Small business", color:"var(--sb-a)" },
+  { id:"commercial",   label:"Commercial",     color:"var(--comm-a)" },
+  { id:"residential",  label:"Residential",    color:"var(--mort-a)" },
+  { id:"construction", label:"Construction",   color:"var(--cons-a)" },
+  { id:"core",         label:"Core",           color:"var(--core-a)" },
+  { id:"ai",           label:"AI",             color:"var(--ai-a)" }
 ];
 
 const KIND_LABEL = { ai:"AI provider", smallbiz:"Small business hub", indirect:"Indirect hub", core:"Core platform", mortgage:"Mortgage hub", commercial:"Commercial hub", consumer:"Consumer hub", integration:"Integration", storage:"Cold storage", construction:"Construction" };
@@ -425,6 +459,7 @@ const SVGNS = "http://www.w3.org/2000/svg";
 const canvas = $("canvas"), world = $("world"), panel = $("panel");
 const edgesG = $("edges"), nodesHost = $("nodes");
 const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+NODES.forEach(n => { n.units = [].concat(n.unit); });
 const byId = Object.fromEntries(NODES.map(n => [n.id, n]));
 const DEFAULT_POS = Object.fromEntries(NODES.map(n => [n.id, { x:n.x, y:n.y }]));
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
@@ -433,21 +468,24 @@ const svgEl = (tag, attrs) => { const e = document.createElementNS(SVGNS, tag); 
 world.style.width = W + "px";
 world.style.height = H + "px";
 ["laneLayer", "linkLayer"].forEach(id => { const s = $(id); s.setAttribute("width", W); s.setAttribute("height", H); s.setAttribute("viewBox", `0 0 ${W} ${H}`); });
-$("counts").textContent = `${NODES.length} systems  /  ${EDGES.length} connections`;
 
 /* ---------- lanes ---------- */
 const laneLayer = $("laneLayer");
 LANES.forEach(l => {
   const y = l.y ?? 110, h = l.h ?? H - 170;
-  laneLayer.appendChild(svgEl("rect", { class:"lane", x:l.x, y, width:l.w, height:h, rx:22 }));
+  l.g = svgEl("g", { class:"lane-group" });
+  l.g.appendChild(svgEl("rect", { class:"lane", x:l.x, y, width:l.w, height:h, rx:22 }));
   const t = svgEl("text", { class:"lane-label", x:l.x + 18, y:y - 14, "text-anchor":"start" });
   t.textContent = l.label.toUpperCase();
-  laneLayer.appendChild(t);
+  l.g.appendChild(t);
+  laneLayer.appendChild(l.g);
 });
 CAPTIONS.forEach(c => {
   const t = svgEl("text", { class:"caption", x:c.x, y:c.y, "text-anchor":"middle" });
   t.textContent = c.text.toUpperCase();
-  laneLayer.appendChild(t);
+  c.g = svgEl("g", { class:"lane-group" });
+  c.g.appendChild(t);
+  laneLayer.appendChild(c.g);
 });
 
 /* ---------- nodes ---------- */
@@ -581,6 +619,7 @@ function canvasCentre() {
 $("zoomIn").addEventListener("click", () => zoomAt(...canvasCentre(), zoom * 1.2, true));
 $("zoomOut").addEventListener("click", () => zoomAt(...canvasCentre(), zoom / 1.2, true));
 $("reset").addEventListener("click", () => {
+  activeUnits.clear(); applyFilter(false);
   zoom = 1; tx = ty = 0;
   NODES.forEach(n => { n.x = DEFAULT_POS[n.id].x; n.y = DEFAULT_POS[n.id].y; placeNode(n); });
   placeOrbits(); updateEdges(); deselect(); applyView(true);
@@ -663,6 +702,8 @@ function connectionsOf(id) {
 
 function select(id) {
   const n = byId[id];
+  // Jumping to a system hidden by the filter clears the filter first
+  if (n.el.classList.contains("filtered-out")) { activeUnits.clear(); applyFilter(false); }
   selected = id;
   const conns = connectionsOf(id);
   const linked = new Set([id, ...conns.map(c => c.other.id)]);
@@ -717,6 +758,93 @@ function deselect() {
 $("close").addEventListener("click", deselect);
 document.addEventListener("keydown", e => { if (e.key === "Escape") deselect(); });
 
+/* ---------- business unit filter ---------- */
+// No units selected = show everything. Otherwise show the selected units' systems,
+// plus any system they connect to (faded) so links into the core stay visible.
+const activeUnits = new Set();
+const filtersHost = $("filters");
+const inUnits = units => !activeUnits.size || units.some(u => activeUnits.has(u));
+
+const chips = [{ id:"", label:"All" }, ...UNITS].map(u => {
+  const b = document.createElement("button");
+  b.className = "chip";
+  b.type = "button";
+  if (u.color) { b.style.setProperty("--sw", u.color); b.appendChild(document.createElement("i")); }
+  b.append(u.label);
+  b.addEventListener("click", () => {
+    if (!u.id) activeUnits.clear();
+    else if (activeUnits.has(u.id)) activeUnits.delete(u.id);
+    else activeUnits.add(u.id);
+    applyFilter(true);
+  });
+  filtersHost.appendChild(b);
+  return { unit:u.id, el:b };
+});
+
+function applyFilter(refit) {
+  const shown = new Set(NODES.filter(n => inUnits(n.units)).map(n => n.id));
+  const ghost = new Set();
+  let edgeCount = 0;
+  EDGES.forEach(e => {
+    const a = shown.has(e.from), b = shown.has(e.to), on = a || b;
+    if (a && !b) ghost.add(e.to);
+    if (b && !a) ghost.add(e.from);
+    e.g.classList.toggle("filtered-out", !on);
+    if (on) edgeCount++;
+  });
+  NODES.forEach(n => {
+    n.el.classList.toggle("ghost", ghost.has(n.id));
+    n.el.classList.toggle("filtered-out", !shown.has(n.id) && !ghost.has(n.id));
+  });
+  [...LANES, ...CAPTIONS].forEach(l => l.g.classList.toggle("filtered-out", !inUnits(l.units)));
+  chips.forEach(c => c.el.setAttribute("aria-pressed", c.unit ? activeUnits.has(c.unit) : !activeUnits.size));
+
+  $("counts").textContent = activeUnits.size
+    ? `${shown.size} of ${NODES.length} systems  /  ${edgeCount} of ${EDGES.length} connections`
+    : `${NODES.length} systems  /  ${EDGES.length} connections`;
+
+  // Keep the filter in the URL so a filtered view can be bookmarked or linked
+  try { history.replaceState(null, "", activeUnits.size ? `#units=${[...activeUnits].join(",")}` : location.pathname + location.search); } catch (_) {}
+
+  if (selected && byId[selected].el.classList.contains("filtered-out")) deselect();
+  if (refit) fitToVisible();
+}
+
+function fitToVisible() {
+  if (!activeUnits.size) { zoom = 1; tx = ty = 0; applyView(true); return; }
+  const vis = NODES.filter(n => !n.el.classList.contains("filtered-out"));
+  if (!vis.length) return;
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  vis.forEach(n => { x0 = Math.min(x0, n.x - 110); x1 = Math.max(x1, n.x + 110); y0 = Math.min(y0, n.y - 50); y1 = Math.max(y1, n.y + 50); });
+  const r = canvas.getBoundingClientRect(), small = r.width < 750;
+  const availW = r.width - (small ? 32 : 120), availH = r.height - (small ? 170 : 240);
+  zoom = clamp(Math.min(availW / (x1 - x0), availH / (y1 - y0)) / fit, 0.5, 2.6);
+  const s = scale();
+  tx = -((x0 + x1) / 2 - W / 2) * s;
+  ty = -((y0 + y1) / 2 - H / 2) * s + (small ? 20 : 40); // leave room for the heading and filter bar
+  applyView(true);
+}
+
+/* ---------- download for offline sharing ---------- */
+$("download").addEventListener("click", async () => {
+  let html = PAGE_SOURCE;
+  if (/^https?:$/.test(location.protocol)) {
+    try {
+      const res = await fetch(location.href.split("#")[0], { cache:"no-store" });
+      const text = res.ok ? await res.text() : "";
+      if (text.includes('id="world"')) html = text;
+    } catch (_) {}
+  }
+  const url = URL.createObjectURL(new Blob([html], { type:"text/html" }));
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "lending_technology_map.html";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+});
+
 /* ---------- starfield ---------- */
 const sc = $("stars"), ctx = sc.getContext("2d");
 let stars = [];
@@ -751,6 +879,9 @@ placeOrbits();
 updateEdges();
 computeFit();
 applyView(false);
+const hashUnits = (location.hash.match(/units=([\w,]+)/) || [])[1];
+if (hashUnits) hashUnits.split(",").forEach(u => { if (UNITS.some(x => x.id === u)) activeUnits.add(u); });
+applyFilter(!!activeUnits.size);
 resizeStars();
 if (!reduceMotion) { requestAnimationFrame(tick); requestAnimationFrame(starLoop); }
 })();

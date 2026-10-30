@@ -263,7 +263,7 @@ const W = 2440, H = 1780;   // COCC sits at the centre (1220, 820)
 const NODES = [
   // ── Core banking (centre) ──
   { id:"cocc",        name:"COCC",             type:"Bank core",          tag:"CORE",    icon:"CO", kind:"core", unit:"core",
-    x:1220, y:820,  desc:"Core banking platform and system of record for the bank. An API read connection to VeraPath is planned but not active." },
+    x:1220, y:820,  desc:"Core banking platform and system of record for the bank. Pushes data one-way to Global Wave. An API read connection to VeraPath is planned but not active." },
   { id:"identifi",    name:"iDentifi",         type:"Cold storage",       tag:"ARCHIVE", icon:"iD", kind:"storage", unit:"core",
     x:1350, y:1020, desc:"Cold storage. Receives data from Encompass, Numerated and DecisionLender, receives LaserPro documents through manual imaging, and exchanges data with COCC." },
 
@@ -307,7 +307,7 @@ const NODES = [
 
   // ── Commercial lending (left of core) ──
   { id:"globalwave",  name:"Global Wave",      type:"Commercial hub",     tag:"HUB",     icon:"GW", kind:"commercial", unit:"commercial",
-    x:320,  y:870,  desc:"Commercial lending hub. Many commercial processes are manual. Receives CoStar, Warren Group and Xactus (credit reports, flood certs) data manually, exchanges data with ValueLink manually, and data reaches LaserPro for loan documents through a manual step." },
+    x:320,  y:870,  desc:"Commercial lending hub. Many commercial processes are manual. Receives a one-way data push from COCC. Receives CoStar, Warren Group and Xactus (credit reports, flood certs) data manually, exchanges data with ValueLink manually, and data reaches LaserPro for loan documents through a manual step." },
   { id:"costar",      name:"CoStar",           type:"Data source",        icon:"✋", kind:"integration", unit:"commercial",
     x:320,  y:765,  desc:"Commercial real estate data. Reaches Global Wave through a manual process (one-way)." },
   { id:"xactusc",     name:"Xactus",           type:"Credit & flood",     icon:"✋", kind:"integration", unit:"commercial",
@@ -389,6 +389,7 @@ const EDGES = [
   { from:"laserpro",       to:"identifi",    flow:"one",  manual:true, note:"Manual imaging of documents" },
 
   { from:"cocc",           to:"built",       flow:"one" },
+  { from:"cocc",           to:"globalwave",  flow:"one",  note:"Data push", c1:[-320, 150], c2:[320, 60] },
   { from:"identifi",       to:"cocc",        flow:"both" },
 
   { from:"cocc",           to:"elink",       flow:"both" },

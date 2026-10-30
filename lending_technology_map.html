@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lending Technology Map</title>
+<style>
+:root{
+  --bg:#07101d;--text:#edf6ff;--muted:#91a7bc;--line:#ffffff14;
+  --core-a:#70e8d5;--core-b:#6cbfff;
+  --mort-a:#ae91ff;--mort-b:#6a91ff;
+  --comm-a:#ffd36b;--comm-b:#ff9a6b;
+  --cons-hub-a:#ffb3a7;--cons-hub-b:#f07aa8;
+  --stor-a:#c9d6e6;--stor-b:#7f98b6;
+  --cons-a:#e2c49c;--cons-b:#b0855a;
+  --ind-a:#e4f57a;--ind-b:#9ccc4e;
+  --sb-a:#7af0b4;--sb-b:#2fb87a;
+  --ai-a:#8ff6ff;--ai-b:#c08bff;
+  --accent:#69f1e0;
+}
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+body{background:radial-gradient(ellipse at 50% 50%,#122541 0%,#091524 48%,#050b14 100%)}
+#stars{position:fixed;inset:0;pointer-events:none;opacity:.7}
+.app{height:100%;display:flex;flex-direction:column;position:relative}
+
+/* Top bar */
+.topbar{height:72px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 32px;border-bottom:1px solid var(--line);background:#07101dcc;backdrop-filter:blur(16px);z-index:10}
+.brand{display:flex;align-items:center;gap:13px}
+.logo{width:38px;height:38px;border-radius:12px;background:linear-gradient(135deg,#68f1e0,#69a9ff);display:grid;place-items:center;color:#06121b;font-weight:900;box-shadow:0 0 26px #5cebd944;font-size:19px}
+.brand-title{font-weight:750;letter-spacing:.02em}
+.brand-sub{color:var(--muted);font-size:11px;margin-top:3px;letter-spacing:.12em;text-transform:uppercase}
+.top-right{display:flex;align-items:center;gap:18px}
+.live{font-size:11px;color:#9bb1c7;letter-spacing:.08em;text-transform:uppercase}
+.live i{display:inline-block;width:7px;height:7px;background:#65efbd;border-radius:50%;margin-right:7px;box-shadow:0 0 10px #65efbd}
+.btn{background:#ffffff08;border:1px solid #ffffff1c;color:#c5d7e9;padding:9px 12px;border-radius:9px;font-size:12px;cursor:pointer;transition:border-color .2s,color .2s,background .2s;font-family:inherit}
+.btn:hover,.btn:focus-visible{border-color:#65e8db;color:#fff;background:#65e8db13;outline:none}
+
+/* Stage */
+main{flex:1;position:relative;min-height:0}
+.heading{position:absolute;z-index:3;top:22px;left:32px;pointer-events:none}
+.eyebrow{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#73dfdc;font-weight:700}
+.heading h1{font-size:22px;margin:7px 0 4px;letter-spacing:-.03em}
+.heading p{margin:0;color:var(--muted);font-size:12px}
+.hint{position:absolute;right:30px;top:24px;color:#7790a7;font-size:10px;letter-spacing:.04em;z-index:3;pointer-events:none}
+
+.canvas{position:absolute;inset:0;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab}
+.canvas.panning{cursor:grabbing}
+.grid{position:absolute;inset:-20%;pointer-events:none;background-image:linear-gradient(#83c9ff0b 1px,transparent 1px),linear-gradient(90deg,#83c9ff0b 1px,transparent 1px);background-size:48px 48px;transform:perspective(1100px) rotateX(54deg) translateY(60px);-webkit-mask-image:radial-gradient(ellipse,#000 15%,transparent 67%);mask-image:radial-gradient(ellipse,#000 15%,transparent 67%);animation:gridmove 36s linear infinite}
+@keyframes gridmove{to{background-position:48px 48px}}
+
+.world{position:absolute;left:50%;top:calc(50% + 20px);transform-origin:50% 50%;will-change:transform}
+.world.animating{transition:transform .35s ease}
+
+.halo{position:absolute;width:560px;height:280px;transform:translate(-50%,-50%);background:#41d4d31a;filter:blur(80px);border-radius:50%;pointer-events:none}
+.orbit{position:absolute;border:1px solid #6fdad61b;border-radius:50%;pointer-events:none;transform:translate(-50%,-50%) rotate(-14deg)}
+.orbit.one{width:760px;height:380px}
+.orbit.two{width:1040px;height:540px;border-style:dashed;animation:orbitspin 85s linear infinite}
+@keyframes orbitspin{from{transform:translate(-50%,-50%) rotate(-14deg)}to{transform:translate(-50%,-50%) rotate(346deg)}}
+
+svg.layer{position:absolute;left:0;top:0;overflow:visible;pointer-events:none}
+.lane{fill:#ffffff04;stroke:#ffffff10;stroke-dasharray:3 6}
+.caption{fill:#91a9bd66;font-size:8.5px;letter-spacing:.16em;font-weight:600}
+.lane-label{fill:#91a9bd88;font-size:10px;letter-spacing:.16em;text-transform:uppercase;font-weight:600}
+.link{fill:none;stroke-width:2.1;stroke:var(--ec);opacity:.75;transition:opacity .25s}
+.link.back{stroke:none}
+.link.glow{stroke-width:7;opacity:.12}
+.is-manual .link.main{stroke-dasharray:9 6;stroke-width:2.3}
+.f-none .link.main{stroke-dasharray:2 7;stroke-linecap:round;stroke-width:2;opacity:.75}
+.f-none .link.glow,.f-inactive .link.glow{display:none}
+.f-inactive .link.main{stroke-dasharray:6 7;stroke-width:1.8;opacity:.6}
+.edge.f-inactive.active .link.main{opacity:1}
+.edge.dim .link{opacity:.12}
+.edge.dim .particle{opacity:.15}
+.edge.active .link:not(.back):not(.glow){opacity:1}
+.edge.active .link.glow{opacity:.28}
+.edge.f-none.active .link.main{opacity:1}
+.chev{fill:none;stroke:var(--ec);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;transition:opacity .25s}
+.edge.dim .chev{opacity:.15}
+.particle{fill:var(--ec);filter:drop-shadow(0 0 4px var(--ec)) brightness(1.35);transition:opacity .25s}
+
+/* Nodes */
+.node{position:absolute;left:0;top:0;transform:translate(-50%,-50%);cursor:pointer;z-index:2;outline:none;transition:opacity .25s}
+.node.dragging{cursor:grabbing;z-index:5}
+.node.dim{opacity:.42}
+.node-core{position:relative;min-width:160px;height:72px;border:1px solid #ffffff20;border-radius:15px;background:linear-gradient(145deg,#172940f2,#0b1829f2);box-shadow:0 15px 40px #0008,inset 0 1px #ffffff12;display:flex;align-items:center;gap:12px;padding:12px 14px;transition:transform .2s ease,border-color .2s,box-shadow .2s}
+.node:hover .node-core,.node:focus-visible .node-core{transform:scale(1.06)}
+.node.dragging .node-core{transform:scale(1.08);transition:none}
+.node.selected .node-core{border-color:#65e9d0aa;box-shadow:0 15px 40px #0008,0 0 0 3px #65e9d022,0 0 30px #65e9d033}
+.node-icon{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;font-size:12px;font-weight:850;letter-spacing:-.04em;flex-shrink:0}
+.k-core .node-icon{background:linear-gradient(140deg,var(--core-a),var(--core-b));color:#08151e}
+.k-mortgage .node-icon{background:linear-gradient(140deg,var(--mort-a),var(--mort-b));color:#101025}
+.k-storage .node-icon{background:linear-gradient(140deg,var(--stor-a),var(--stor-b));color:#0b1620}
+.k-construction .node-icon{background:linear-gradient(140deg,var(--cons-a),var(--cons-b));color:#1e1308}
+.k-indirect .node-icon{background:linear-gradient(140deg,var(--ind-a),var(--ind-b));color:#141c05}
+.k-indirect .tag{color:#e4f57a;border-color:#c9e66b44;background:#c9e66b10}
+.k-indirect .pulse{border-color:#c9e66b44}
+.k-smallbiz .node-icon{background:linear-gradient(140deg,var(--sb-a),var(--sb-b));color:#04190e}
+.k-smallbiz .tag{color:#7af0b4;border-color:#5fdc9e44;background:#5fdc9e10}
+.k-smallbiz .pulse{border-color:#5fdc9e44}
+.k-ai .node-icon{background:linear-gradient(140deg,var(--ai-a),var(--ai-b));color:#120a24}
+.k-ai .tag{color:#c9b5ff;border-color:#b79bff44;background:#b79bff10}
+.k-ai .pulse{border-color:#b79bff44}
+.k-storage .node-core,.k-construction .node-core{height:64px;min-width:170px}
+.k-storage .tag{color:#c9d6e6;border-color:#a9bdd444;background:#a9bdd410}
+.k-construction .tag{color:#e2c49c;border-color:#d2ad8044;background:#d2ad8010}
+.unlinked .node-core{border-style:dashed;border-color:#ffffff30;background:linear-gradient(145deg,#12203299,#0b182999)}
+.unlinked .node-icon{color:#7f93a8;border-color:#ffffff22;background:#101c2a}
+.k-consumer .node-icon{background:linear-gradient(140deg,var(--cons-hub-a),var(--cons-hub-b));color:#230a1c}
+.k-consumer .tag{color:#ffb3d0;border-color:#ff8fb844;background:#ff8fb810}
+.k-consumer .pulse{border-color:#ff8fb844}
+.k-commercial .node-icon{background:linear-gradient(140deg,var(--comm-a),var(--comm-b));color:#231205}
+.k-integration .node-core{min-width:150px;height:60px;padding:9px 12px;border-radius:13px}
+.k-integration .node-icon{width:33px;height:33px;border-radius:9px;background:#132e40;color:#72e9df;border:1px solid #59decd45}
+.node-name{font-weight:720;font-size:13px;white-space:nowrap}
+.node-type{font-size:10px;color:#91a9bf;margin-top:4px;white-space:nowrap}
+.tag{font-size:9px;padding:3px 6px;border-radius:20px;margin-left:auto;white-space:nowrap;border:1px solid;letter-spacing:.04em}
+.k-core .tag{color:#80e6d8;border-color:#55d7c833;background:#53dfcd0d}
+.k-mortgage .tag{color:#c3b0ff;border-color:#ae91ff44;background:#ae91ff10}
+.k-commercial .tag{color:#ffd38a;border-color:#ffc46b44;background:#ffc46b10}
+.pulse{position:absolute;inset:-7px;border:1px solid #65e9d044;border-radius:20px;animation:pulse 2.8s ease-out infinite;pointer-events:none}
+.k-mortgage .pulse{border-color:#ae91ff44}
+.k-commercial .pulse{border-color:#ffc46b44}
+@keyframes pulse{0%{transform:scale(.98);opacity:.7}100%{transform:scale(1.14);opacity:0}}
+
+/* Detail panel */
+.panel{position:absolute;right:24px;top:50%;transform:translateY(-50%) translateX(20px);width:290px;max-height:calc(100% - 48px);overflow:auto;border-radius:16px;padding:19px;background:#0a1726f2;border:1px solid #ffffff1b;box-shadow:0 20px 70px #0008;backdrop-filter:blur(20px);opacity:0;visibility:hidden;transition:opacity .3s,transform .3s,visibility 0s linear .3s;z-index:8}
+.panel.open{opacity:1;visibility:visible;transform:translateY(-50%) translateX(0);transition:opacity .3s,transform .3s,visibility 0s}
+.panel-close{position:absolute;right:10px;top:8px;background:none;border:0;color:#8fa8bf;font-size:20px;cursor:pointer;padding:4px 8px}
+.panel-close:hover{color:#fff}
+.panel-kicker{font-size:9px;color:#70e8d9;letter-spacing:.16em;text-transform:uppercase}
+.panel h2{margin:10px 0 5px;font-size:19px}
+.panel p{font-size:12px;line-height:1.6;color:#a4b7c9;margin:0 0 6px}
+.detail{border-top:1px solid #ffffff12;padding:12px 0 0;margin-top:12px}
+.detail-label{font-size:9px;color:#758da4;letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px}
+.conn{display:flex;align-items:flex-start;gap:9px;padding:7px 0;font-size:12px;color:#e2edf7;border-bottom:1px solid #ffffff08;cursor:pointer}
+.conn:last-child{border-bottom:0}
+.conn:hover .conn-name{color:var(--accent)}
+.conn-arrow{color:var(--ec,#83ecdd);font-size:12px;width:16px;flex-shrink:0}
+.conn-note{display:block;font-size:10px;color:#8aa1b6;margin-top:3px}
+.conn-note.warn{color:var(--ec)}
+
+/* Legend / controls / footer */
+.legend{position:absolute;bottom:22px;left:32px;display:flex;gap:16px;align-items:center;color:#91a7bc;font-size:10px;z-index:3;flex-wrap:wrap;pointer-events:none}
+.legend-item{display:flex;align-items:center;gap:7px}
+.legend-line{height:2px;width:22px;background:linear-gradient(90deg,#63efdd,#789aff);box-shadow:0 0 7px #63efdd66}
+.legend-dash{height:0;width:22px;border-top:1px dashed #87a1c8}
+.lg{width:24px;height:0;border-top:2px solid var(--ec);box-shadow:0 0 6px var(--ec)}
+.lg.manual{border-top-style:dashed}
+.lg.none{border-top-style:dotted;box-shadow:none}
+.lg.inactive{border-top-style:dashed;box-shadow:none;opacity:.7}
+.legend-sep{width:1px;height:12px;background:#ffffff22}
+.swatch{width:10px;height:10px;border-radius:3px}
+.controls{position:absolute;bottom:18px;right:24px;display:flex;gap:7px;z-index:3}
+footer{height:31px;flex-shrink:0;border-top:1px solid #ffffff0d;padding:0 32px;display:flex;align-items:center;justify-content:space-between;color:#687f95;font-size:9px;letter-spacing:.08em;text-transform:uppercase}
+
+@media (max-width:750px){
+  .topbar{padding:0 16px;height:64px}.live{display:none}
+  .heading{left:16px;top:14px}.heading h1{font-size:18px}.heading p{display:none}
+  .hint{display:none}
+  .panel{right:12px;left:12px;width:auto;top:auto;bottom:60px;max-height:55%;transform:translateY(14px)}
+  .panel.open{transform:translateY(0)}
+  .legend{left:16px;right:110px;bottom:16px;gap:6px 10px}.legend .opt,.legend-sep{display:none}
+  footer span:first-child{display:none}
+  .controls{right:12px;bottom:10px}
+  footer{padding:0 16px}
+}
+@media (prefers-reduced-motion:reduce){
+  .grid,.orbit.two,.pulse{animation:none}
+  .pulse{display:none}
+}
+</style>
+</head>
+<body>
+<canvas id="stars"></canvas>
+<div class="app">
+  <header class="topbar">
+    <div class="brand"><div class="logo">✳</div><div><div class="brand-title">Integration Atlas</div><div class="brand-sub">Lending technology map</div></div></div>
+    <div class="top-right"><div class="live"><i></i>Network view</div><button class="btn" id="reset" title="Reset zoom, pan and node positions">⌂ &nbsp;Reset view</button></div>
+  </header>
+  <main>
+    <div class="heading"><div class="eyebrow">Systems landscape / 01</div><h1>Lending technology map</h1><p>Consumer, indirect, small business, commercial and residential lending around the core and their integrations.</p></div>
+    <div class="hint">CLICK A NODE TO EXPLORE &nbsp;·&nbsp; DRAG TO PAN OR MOVE NODES &nbsp;·&nbsp; SCROLL TO ZOOM</div>
+    <div class="canvas" id="canvas">
+      <div class="grid"></div>
+      <div class="world" id="world">
+        <div class="halo" id="halo"></div>
+        <div class="orbit one" id="orbit1"></div>
+        <div class="orbit two" id="orbit2"></div>
+        <svg class="layer" id="laneLayer" aria-hidden="true"></svg>
+        <svg class="layer" id="linkLayer" aria-hidden="true">
+          <g id="edges"></g>
+        </svg>
+        <div id="nodes"></div>
+      </div>
+    </div>
+
+    <aside class="panel" id="panel" aria-live="polite">
+      <button class="panel-close" id="close" aria-label="Close details">×</button>
+      <div class="panel-kicker" id="pKicker">Platform details</div>
+      <h2 id="pTitle"></h2>
+      <p id="pDesc"></p>
+      <div class="detail"><div class="detail-label">Connected systems</div><div id="pConnections"></div></div>
+    </aside>
+
+    <div class="legend">
+      <div class="legend-item"><i class="lg" style="--ec:#5ee9d6"></i> Bidirectional</div>
+      <div class="legend-item"><i class="lg" style="--ec:#8ea6ff"></i> One-way</div>
+      <div class="legend-item"><i class="lg manual" style="--ec:#ff8fc8"></i> Manual process</div>
+      <div class="legend-item"><i class="lg inactive" style="--ec:#8193a8"></i> Not active (API)</div>
+      <span class="legend-sep"></span>
+      <div class="legend-item"><i class="swatch" style="background:linear-gradient(140deg,var(--core-a),var(--core-b))"></i> Core</div>
+      <div class="legend-item"><i class="swatch" style="background:linear-gradient(140deg,var(--mort-a),var(--mort-b))"></i> Mortgage</div>
+      <div class="legend-item"><i class="swatch" style="background:linear-gradient(140deg,var(--comm-a),var(--comm-b))"></i> Commercial</div>
+      <div class="legend-item"><i class="swatch" style="background:linear-gradient(140deg,var(--cons-hub-a),var(--cons-hub-b))"></i> Consumer</div>
+      <div class="legend-item"><i class="swatch" style="background:linear-gradient(140deg,var(--stor-a),var(--stor-b))"></i> Cold storage</div>
+      <div class="legend-item"><i class="swatch" style="background:linear-gradient(140deg,var(--cons-a),var(--cons-b))"></i> Construction</div>
+      <div class="legend-item"><i class="swatch" style="background:linear-gradient(140deg,var(--ind-a),var(--ind-b))"></i> Indirect</div>
+      <div class="legend-item"><i class="swatch" style="background:linear-gradient(140deg,var(--sb-a),var(--sb-b))"></i> Small business</div>
+      <div class="legend-item"><i class="swatch" style="background:linear-gradient(140deg,var(--ai-a),var(--ai-b))"></i> AI</div>
+    </div>
+    <div class="controls">
+      <button class="btn" id="zoomOut" aria-label="Zoom out">−</button>
+      <button class="btn" id="zoomIn" aria-label="Zoom in">+</button>
+    </div>
+  </main>
+  <footer><span>Integration Atlas &nbsp;·&nbsp; Architecture overview</span><span id="counts"></span></footer>
+</div>
+
+<script>
+(() => {
+"use strict";
+
+/* ============================================================
+   DATA — edit this section to add systems and connections.
+   x / y are positions in the W × H world.
+   kind: core | mortgage | commercial | integration
+   ============================================================ */
+const W = 2440, H = 1780;   // COCC sits at the centre (1220, 820)
+
+const NODES = [
+  // ── Core banking (centre) ──
+  { id:"cocc",        name:"COCC",             type:"Bank core",          tag:"CORE",    icon:"CO", kind:"core",
+    x:1220, y:820,  desc:"Core banking platform and system of record for the bank. An API read connection to VeraPath is planned but not active." },
+  { id:"identifi",    name:"iDentifi",         type:"Cold storage",       tag:"ARCHIVE", icon:"iD", kind:"storage",
+    x:1350, y:1020, desc:"Cold storage. Receives data from Encompass, Numerated and DecisionLender, receives LaserPro documents through manual imaging, and exchanges data with COCC." },
+
+  // ── Consumer lending (above core) ──
+  { id:"loanwriter",  name:"LoanWriter",       type:"Consumer hub",       tag:"HUB",     icon:"LW", kind:"consumer",
+    x:760,  y:1440, desc:"Consumer lending hub. Has a built-in point of sale, receives credit data from TransUnion, connects directly to COCC, and receives wholesale loans through a manual process." },
+  { id:"wholesale",   name:"Wholesale lender", type:"Wholesale",          icon:"✋", kind:"integration",
+    x:470,  y:1440, desc:"Wholesale lending. Data flows to LoanWriter through a manual process (one-way). Not connected to DecisionLender." },
+  { id:"transunion",  name:"TransUnion",       type:"Credit bureau",      icon:"TU", kind:"integration",
+    x:650,  y:1270, desc:"Sends data to LoanWriter (one-way)." },
+  { id:"lwpos",       name:"LoanWriter POS",   type:"Point of sale (built-in)", icon:"PS", kind:"integration",
+    x:720,  y:1640, desc:"Point of sale built into LoanWriter. Data flows both ways." },
+
+  // ── Small business lending (above core) ──
+  { id:"numerated",   name:"Numerated",        type:"Small business hub", tag:"HUB",     icon:"NU", kind:"smallbiz",
+    x:1220, y:560,  desc:"Small business lending hub. Receives data from LexisNexis, Dun & Bradstreet and Experian, exchanges data with DocuSign, sends data to iDentifi, and reaches COCC through a manual process." },
+  { id:"docusign",    name:"DocuSign",         type:"E-signature",        icon:"DS", kind:"integration",
+    x:1010, y:560,  desc:"E-signature. Exchanges data with Numerated (bidirectional)." },
+  { id:"lexisnexis",  name:"LexisNexis",       type:"Data provider",      icon:"LN", kind:"integration",
+    x:1030, y:330,  desc:"Sends data to Numerated (one-way)." },
+  { id:"dnb",         name:"Dun & Bradstreet", type:"Business credit",    icon:"DB", kind:"integration",
+    x:1220, y:330,  desc:"Sends data to Numerated (one-way)." },
+  { id:"experiansb",  name:"Experian",         type:"Credit bureau",      icon:"EX", kind:"integration",
+    x:1410, y:330,  desc:"Sends data to Numerated (one-way). Shown separately from the indirect lending Experian connection." },
+
+  // ── Indirect lending (below core) ──
+  { id:"decisionlender", name:"DecisionLender", type:"Indirect hub",     tag:"HUB",     icon:"DL", kind:"indirect",
+    x:1220, y:1440, desc:"Indirect lending hub. Exchanges data with DealerTrack Tech and RouteOne, receives credit data from Experian, Equifax and TransUnion, sends data one-way to iDentifi, has an inactive API connection to VeraPath (OpenAPI config ready), and sends data one-way to its LenderLink instance, which passes it on to COCC." },
+  { id:"dealertrack",    name:"DealerTrack Tech", type:"Dealer platform", icon:"DT", kind:"integration",
+    x:1000, y:1320, desc:"Dealer platform. Exchanges data with DecisionLender (bidirectional)." },
+  { id:"routeone",       name:"RouteOne",       type:"Dealer platform",   icon:"R1", kind:"integration",
+    x:1440, y:1320, desc:"Dealer platform. Exchanges data with DecisionLender (bidirectional)." },
+  { id:"experian",       name:"Experian",       type:"Credit bureau",     icon:"EX", kind:"integration",
+    x:1010, y:1640, desc:"Sends data to DecisionLender (one-way)." },
+  { id:"equifax",        name:"Equifax",        type:"Credit bureau",     icon:"EQ", kind:"integration",
+    x:1220, y:1640, desc:"Sends data to DecisionLender (one-way)." },
+  { id:"transunioni",    name:"TransUnion",     type:"Credit bureau",     icon:"TU", kind:"integration",
+    x:1430, y:1640, desc:"Sends data to DecisionLender (one-way). Shown separately from the consumer lending TransUnion connection." },
+  { id:"lenderlinki", name:"LenderLink",       type:"Middleware · indirect", icon:"LL", kind:"integration",
+    x:1170, y:1220, desc:"Indirect lending's LenderLink instance (separate from commercial). Carries DecisionLender data into COCC (one-way)." },
+
+  // ── Commercial lending (left of core) ──
+  { id:"globalwave",  name:"Global Wave",      type:"Commercial hub",     tag:"HUB",     icon:"GW", kind:"commercial",
+    x:320,  y:870,  desc:"Commercial lending hub. Many commercial processes are manual. Receives CoStar, Warren Group and Xactus (credit reports, flood certs) data manually, exchanges data with ValueLink manually, and data reaches LaserPro for loan documents through a manual step." },
+  { id:"costar",      name:"CoStar",           type:"Data source",        icon:"✋", kind:"integration",
+    x:320,  y:765,  desc:"Commercial real estate data. Reaches Global Wave through a manual process (one-way)." },
+  { id:"xactusc",     name:"Xactus",           type:"Credit & flood",     icon:"✋", kind:"integration",
+    x:560,  y:760,  desc:"Commercial: credit reports and flood certs. Reaches Global Wave through a manual process (one-way). Same vendor as the residential Xactus integration." },
+  { id:"valuelinkc",  name:"ValueLink",        type:"Appraisal mgmt",     icon:"✋", kind:"integration",
+    x:560,  y:880,  desc:"Appraisal management software. Manual process with Global Wave, data flowing both ways. Same vendor as the residential ValueLink integration." },
+  { id:"warren",      name:"Warren Group",     type:"Data source",        icon:"✋", kind:"integration",
+    x:330,  y:1010, desc:"Real estate and property data. Reaches Global Wave through a manual process (one-way)." },
+  { id:"laserpro",    name:"LaserPro",         type:"Loan documents",     icon:"LP", kind:"integration",
+    x:580,  y:1030, desc:"Commercial loan documents. Receives data from Global Wave (manual), sends data to LenderLink, and documents reach iDentifi through manual imaging." },
+  { id:"lenderlinkc", name:"LenderLink",       type:"Middleware · commercial", icon:"LL", kind:"integration",
+    x:820,  y:780,  desc:"Commercial lending's LenderLink instance (separate from indirect). Carries LaserPro data into COCC (one-way)." },
+
+  // ── Construction (own box, lower left) ──
+  { id:"built",       name:"Built",            type:"Construction mgmt",  tag:"SHARED",  icon:"BU", kind:"construction",
+    x:530,  y:450,  desc:"Construction loan management, shared by commercial and residential lending. Receives data from COCC (one-way)." },
+
+  // ── Residential mortgage (right of core) ──
+  { id:"elink",       name:"eLink",            type:"Integration",        icon:"↔", kind:"integration",
+    x:1630, y:820,  desc:"Integration connecting Encompass and COCC." },
+  { id:"encompass",   name:"Encompass",        type:"Mortgage hub",       tag:"HUB",     icon:"EN", kind:"mortgage",
+    x:1860, y:820,  desc:"Residential mortgage loan origination platform and hub for the mortgage integrations. Reaches COCC through eLink. API connection to VeraPath is configured (OpenAPI) but not active." },
+  { id:"verapath",    name:"VeraPath",         type:"Central AI provider", tag:"AI",     icon:"VP", kind:"ai",
+    x:1890, y:1500, desc:"The bank's central AI provider. DecisionLender and Encompass both have OpenAPI configurations for connecting to VeraPath by API, and COCC has a planned API read connection. None of these are active yet." },
+  { id:"tpo",         name:"TPO Connect",      type:"Integration",        icon:"↔", kind:"integration",
+    x:2190, y:570,  desc:"Integration connected to Encompass only." },
+  { id:"consumer",    name:"Consumer Connect", type:"Integration",        icon:"↔", kind:"integration",
+    x:2190, y:670,  desc:"Integration connected to Encompass only." },
+  { id:"xactus",      name:"Xactus",           type:"Credit & verification", icon:"↔", kind:"integration",
+    x:2190, y:770,  desc:"Residential: credit reports, flood certs, fraud reports, credit monitoring and verification of employment. Exchanges data with Encompass. A separate commercial connection to Global Wave is shown in Commercial lending." },
+  { id:"valuelink",   name:"ValueLink",        type:"Appraisal mgmt",     icon:"↔", kind:"integration",
+    x:2190, y:870,  desc:"Appraisal management software. Exchanges data with Encompass. A separate manual connection to Global Wave is shown in Commercial lending." },
+  { id:"xactusavm",   name:"Xactus (AVM)",     type:"AVM",                icon:"✋", kind:"integration",
+    x:2190, y:970,  desc:"Automated valuation through Xactus. Manual process with data flowing both ways." },
+  { id:"alacriti",    name:"Alacriti",         type:"Appraisal payments", icon:"✋", kind:"integration",
+    x:2190, y:1070, desc:"Appraisal payments. Manual process with data flowing both ways." },
+  { id:"fannie",      name:"Fannie Mae",       type:"Investor / GSE",     icon:"→", kind:"integration",
+    x:1760, y:440,  desc:"Receives data from Encompass (one-way)." },
+  { id:"freddie",     name:"Freddie Mac",      type:"Investor / GSE",     icon:"→", kind:"integration",
+    x:1970, y:440,  desc:"Receives data from Encompass (one-way)." },
+  { id:"enact",       name:"Enact MI",         type:"Mortgage insurance", icon:"→", kind:"integration",
+    x:1700, y:1200, desc:"Sends data to Encompass (one-way)." },
+  { id:"mgic",        name:"MGIC",             type:"Mortgage insurance", icon:"→", kind:"integration",
+    x:1930, y:1200, desc:"Sends data to Encompass (one-way)." },
+  { id:"oldrepublic", name:"Old Republic",     type:"Mortgage insurance", icon:"✋", kind:"integration",
+    x:2120, y:1200, desc:"Mortgage insurance. Data reaches Encompass through a manual process." }
+];
+
+// flow: "both" (bidirectional) | "one" (from → to) | "none" (no integration)
+// manual: true marks a manual process (pink, dashed). bend: optional curve tightness (default .45)
+const EDGES = [
+  { from:"transunion",     to:"loanwriter",  flow:"one" },
+  { from:"loanwriter",     to:"lwpos",       flow:"both", note:"Built into LoanWriter" },
+  { from:"loanwriter",     to:"cocc",        flow:"both", note:"Direct connection", bend:.2 },
+  { from:"wholesale",      to:"loanwriter",  flow:"one",  manual:true, note:"Wholesale" },
+  { from:"numerated",      to:"docusign",    flow:"both" },
+  { from:"numerated",      to:"cocc",        flow:"one",  manual:true },
+  { from:"numerated",      to:"identifi",    flow:"one",  c1:[260, 0], c2:[220, -40] },
+  { from:"decisionlender", to:"identifi",    flow:"one" },
+  { from:"lexisnexis",     to:"numerated",   flow:"one" },
+  { from:"experiansb",     to:"numerated",   flow:"one" },
+  { from:"dnb",            to:"numerated",   flow:"one" },
+
+  { from:"decisionlender", to:"lenderlinki", flow:"one" },
+  { from:"dealertrack",    to:"decisionlender", flow:"both" },
+  { from:"routeone",       to:"decisionlender", flow:"both" },
+  { from:"experian",       to:"decisionlender", flow:"one" },
+  { from:"equifax",        to:"decisionlender", flow:"one" },
+  { from:"transunioni",    to:"decisionlender", flow:"one" },
+  { from:"lenderlinki",    to:"cocc",        flow:"one" },
+
+  { from:"xactusc",        to:"globalwave",  flow:"one",  manual:true, note:"Credit reports & flood certs" },
+  { from:"globalwave",     to:"valuelinkc",  flow:"both", manual:true, note:"Appraisal management" },
+  { from:"costar",         to:"globalwave",  flow:"one",  manual:true, note:"Manual data source" },
+  { from:"warren",         to:"globalwave",  flow:"one",  manual:true, note:"Manual data source" },
+  { from:"globalwave",     to:"laserpro",    flow:"one",  manual:true, note:"Loan documents" },
+  { from:"laserpro",       to:"lenderlinkc", flow:"one" },
+  { from:"lenderlinkc",    to:"cocc",        flow:"one" },
+  { from:"laserpro",       to:"identifi",    flow:"one",  manual:true, note:"Manual imaging of documents" },
+
+  { from:"cocc",           to:"built",       flow:"one" },
+  { from:"identifi",       to:"cocc",        flow:"both" },
+
+  { from:"cocc",           to:"elink",       flow:"both" },
+  { from:"elink",          to:"encompass",   flow:"both" },
+  { from:"encompass",      to:"identifi",    flow:"one",  bend:.2 },
+  { from:"encompass",      to:"tpo",         flow:"both" },
+  { from:"encompass",      to:"consumer",    flow:"both" },
+  { from:"encompass",      to:"xactus",      flow:"both" },
+  { from:"encompass",      to:"valuelink",   flow:"both" },
+  { from:"encompass",      to:"xactusavm",   flow:"both", manual:true, note:"AVM" },
+  { from:"encompass",      to:"alacriti",    flow:"both", manual:true, note:"Appraisal payments" },
+  { from:"encompass",      to:"fannie",      flow:"one" },
+  { from:"encompass",      to:"freddie",     flow:"one" },
+  { from:"encompass",      to:"verapath",    flow:"inactive", note:"API · OpenAPI config ready", c1:[-60, 300], c2:[-80, -200] },
+  { from:"cocc",           to:"verapath",    flow:"inactive", note:"API read · not active", c1:[420, 40], c2:[-420, -160] },
+  { from:"decisionlender", to:"verapath",    flow:"inactive", note:"API · OpenAPI config ready" },
+  { from:"enact",          to:"encompass",   flow:"one" },
+  { from:"mgic",           to:"encompass",   flow:"one" },
+  { from:"oldrepublic",    to:"encompass",   flow:"one",  manual:true }
+];
+
+const FLOW = {
+  both:   { label:"Bidirectional",  color:"#5ee9d6" },
+  one:    { label:"One-way",        color:"#8ea6ff" },
+  none:   { label:"No integration", color:"#6b7c8f" },
+  inactive: { label:"Not active",   color:"#8193a8" }
+};
+const MANUAL_COLOR = "#ff8fc8";
+const edgeColor = e => e.manual ? MANUAL_COLOR : FLOW[e.flow].color;
+
+// Lanes are the shaded boxes around each business unit
+const LANES = [
+  { label:"Small business lending",        x:920,  y:170,  w:580, h:490 },
+  { label:"Core banking",                  x:1050, y:710,  w:430, h:370 },
+  { label:"Consumer & indirect lending",   x:330,  y:1160, w:1200, h:560 },
+  { label:"Commercial lending",            x:180,  y:700,  w:820, h:420 },
+  { label:"Construction",                  x:180,  y:350,  w:700, h:200 },
+  { label:"Residential mortgage lending",  x:1540, y:360,  w:860, h:910 },
+  { label:"AI platform",                   x:1690, y:1360, w:400, h:280 }
+];
+
+const CAPTIONS = [
+  { text:"Investors",            x:1865, y:398 },
+  { text:"Partner integrations", x:2190, y:526 },
+  { text:"Mortgage insurance",   x:1910, y:1252 },
+  { text:"Credit bureaus",       x:1220, y:1700 }
+];
+
+const KIND_LABEL = { ai:"AI provider", smallbiz:"Small business hub", indirect:"Indirect hub", core:"Core platform", mortgage:"Mortgage hub", commercial:"Commercial hub", consumer:"Consumer hub", integration:"Integration", storage:"Cold storage", construction:"Construction" };
+const ORBIT_CENTER = "cocc";
+
+/* ============================================================ */
+
+const $ = id => document.getElementById(id);
+const SVGNS = "http://www.w3.org/2000/svg";
+const canvas = $("canvas"), world = $("world"), panel = $("panel");
+const edgesG = $("edges"), nodesHost = $("nodes");
+const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const byId = Object.fromEntries(NODES.map(n => [n.id, n]));
+const DEFAULT_POS = Object.fromEntries(NODES.map(n => [n.id, { x:n.x, y:n.y }]));
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const svgEl = (tag, attrs) => { const e = document.createElementNS(SVGNS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); return e; };
+
+world.style.width = W + "px";
+world.style.height = H + "px";
+["laneLayer", "linkLayer"].forEach(id => { const s = $(id); s.setAttribute("width", W); s.setAttribute("height", H); s.setAttribute("viewBox", `0 0 ${W} ${H}`); });
+$("counts").textContent = `${NODES.length} systems  /  ${EDGES.length} connections`;
+
+/* ---------- lanes ---------- */
+const laneLayer = $("laneLayer");
+LANES.forEach(l => {
+  const y = l.y ?? 110, h = l.h ?? H - 170;
+  laneLayer.appendChild(svgEl("rect", { class:"lane", x:l.x, y, width:l.w, height:h, rx:22 }));
+  const t = svgEl("text", { class:"lane-label", x:l.x + 18, y:y - 14, "text-anchor":"start" });
+  t.textContent = l.label.toUpperCase();
+  laneLayer.appendChild(t);
+});
+CAPTIONS.forEach(c => {
+  const t = svgEl("text", { class:"caption", x:c.x, y:c.y, "text-anchor":"middle" });
+  t.textContent = c.text.toUpperCase();
+  laneLayer.appendChild(t);
+});
+
+/* ---------- nodes ---------- */
+NODES.forEach(n => {
+  const el = document.createElement("div");
+  el.className = `node k-${n.kind}${n.unlinked ? " unlinked" : ""}`;
+  el.tabIndex = 0;
+  el.setAttribute("role", "button");
+  el.setAttribute("aria-label", `${n.name}, ${n.type}`);
+  el.dataset.id = n.id;
+  const hub = ["core", "mortgage", "commercial", "consumer", "indirect", "smallbiz", "ai"].includes(n.kind);
+  el.innerHTML = `${hub && !reduceMotion ? '<div class="pulse"></div>' : ""}
+    <div class="node-core"><div class="node-icon"></div><div><div class="node-name"></div><div class="node-type"></div></div>${n.tag ? '<span class="tag"></span>' : ""}</div>`;
+  el.querySelector(".node-icon").textContent = n.icon;
+  el.querySelector(".node-name").textContent = n.name;
+  el.querySelector(".node-type").textContent = n.type;
+  if (n.tag) el.querySelector(".tag").textContent = n.tag;
+  n.el = el;
+  nodesHost.appendChild(el);
+});
+
+function placeNode(n) { n.el.style.left = n.x + "px"; n.el.style.top = n.y + "px"; }
+
+function placeOrbits() {
+  const c = byId[ORBIT_CENTER];
+  ["halo", "orbit1", "orbit2"].forEach(id => { const e = $(id); e.style.left = c.x + "px"; e.style.top = c.y + "px"; });
+}
+
+/* ---------- edges ---------- */
+function curve(a, b, offset, k = 0.45, c1, c2) {
+  if (c1 && c2) return `M ${a.x} ${a.y} C ${a.x + c1[0]} ${a.y + c1[1]}, ${b.x + c2[0]} ${b.y + c2[1]}, ${b.x} ${b.y}`;
+  const dx = b.x - a.x, dy = b.y - a.y, len = Math.hypot(dx, dy) || 1;
+  const ox = -dy / len * offset, oy = dx / len * offset;
+  const ax = a.x + ox, ay = a.y + oy, bx = b.x + ox, by = b.y + oy;
+  const dir = Math.sign(dx) || 1, bend = Math.max(30, Math.abs(dx) * k);
+  return `M ${ax} ${ay} C ${ax + dir * bend} ${ay}, ${bx - dir * bend} ${by}, ${bx} ${by}`;
+}
+
+EDGES.forEach((e, i) => {
+  const g = svgEl("g", { class:`edge f-${e.flow}${e.manual ? " is-manual" : ""}` });
+  g.style.setProperty("--ec", edgeColor(e));
+  e.glow = svgEl("path", { class:"link glow" });
+  e.fwd  = svgEl("path", { class:"link main" });
+  e.oneWay = e.flow === "one";
+  g.append(e.glow, e.fwd);
+  if (e.flow === "both") { e.back = svgEl("path", { class:"link back" }); g.appendChild(e.back); }
+  if (e.oneWay) { e.chev = svgEl("path", { class:"chev", d:"M -5 -5 L 2 0 L -5 5" }); g.appendChild(e.chev); }
+  e.dots = [];
+  if (!reduceMotion && e.flow !== "none" && e.flow !== "inactive") {
+    // One-way: two staggered particles travelling from → to. Bidirectional: one each way.
+    e.dots.push({ el: svgEl("circle", { r:2.7, class:"particle" }), path: e.fwd, off:0 });
+    if (e.oneWay) e.dots.push({ el: svgEl("circle", { r:2.7, class:"particle" }), path: e.fwd, off:.5 });
+    else e.dots.push({ el: svgEl("circle", { r:2.7, class:"particle" }), path: e.back, off:0 });
+    e.dots.forEach(d => g.appendChild(d.el));
+  }
+  e.duration = (e.manual ? 7000 : 4200) + i * 150;
+  e.phase = (i * 0.37) % 1;
+  e.g = g;
+  edgesG.appendChild(g);
+});
+
+function updateEdges() {
+  EDGES.forEach(e => {
+    const a = byId[e.from], b = byId[e.to];
+    const d = curve(a, b, 0, e.bend, e.c1, e.c2);
+    e.fwd.setAttribute("d", d);
+    e.glow.setAttribute("d", d);
+    // Return path is drawn b → a so a particle moving along it travels backwards.
+    if (e.back) e.back.setAttribute("d", curve(b, a, 0, e.bend));
+    if (e.chev) {
+      // Direction chevron at the midpoint of one-way links
+      const len = e.fwd.getTotalLength(), p = e.fwd.getPointAtLength(len / 2), q = e.fwd.getPointAtLength(len / 2 + 1);
+      e.chev.setAttribute("transform", `translate(${p.x} ${p.y}) rotate(${Math.atan2(q.y - p.y, q.x - p.x) * 180 / Math.PI})`);
+    }
+    e.dots.forEach(dot => { dot.len = dot.path.getTotalLength(); });
+  });
+}
+
+/* ---------- particle loop (one rAF, positions follow live geometry) ---------- */
+function tick(now) {
+  for (const e of EDGES) {
+    const t = (now / e.duration + e.phase) % 1;
+    for (const dot of e.dots) {
+      if (!dot.len) continue;
+      const p = dot.path.getPointAtLength(((t + dot.off) % 1) * dot.len);
+      dot.el.setAttribute("cx", p.x);
+      dot.el.setAttribute("cy", p.y);
+    }
+  }
+  requestAnimationFrame(tick);
+}
+
+/* ---------- view: fit, pan, zoom ---------- */
+const OY = 20; // world sits 20px below canvas centre (matches CSS top)
+let fit = 1, zoom = 1, tx = 0, ty = 0, animTimer = 0;
+const scale = () => fit * zoom;
+
+function computeFit() {
+  const r = canvas.getBoundingClientRect();
+  const small = r.width < 750;
+  fit = clamp(Math.min((r.width - (small ? 16 : 60)) / W, (r.height - (small ? 110 : 150)) / H), small ? 0.32 : 0.6, 1.1);
+}
+
+function applyView(animate) {
+  if (animate) {
+    world.classList.add("animating");
+    clearTimeout(animTimer);
+    animTimer = setTimeout(() => world.classList.remove("animating"), 380);
+  } else {
+    world.classList.remove("animating");
+  }
+  world.style.transform = `translate(calc(-50% + ${tx}px), calc(-50% + ${ty}px)) scale(${scale()})`;
+}
+
+function zoomAt(px, py, nextZoom, animate) {
+  const r = canvas.getBoundingClientRect();
+  const cx = r.left + r.width / 2, cy = r.top + r.height / 2 + OY;
+  const s = scale(), wx = (px - cx - tx) / s, wy = (py - cy - ty) / s;
+  zoom = clamp(nextZoom, 0.5, 2.6);
+  const s2 = scale();
+  tx = px - cx - wx * s2;
+  ty = py - cy - wy * s2;
+  applyView(animate);
+}
+
+function canvasCentre() {
+  const r = canvas.getBoundingClientRect();
+  return [r.left + r.width / 2, r.top + r.height / 2 + OY];
+}
+
+$("zoomIn").addEventListener("click", () => zoomAt(...canvasCentre(), zoom * 1.2, true));
+$("zoomOut").addEventListener("click", () => zoomAt(...canvasCentre(), zoom / 1.2, true));
+$("reset").addEventListener("click", () => {
+  zoom = 1; tx = ty = 0;
+  NODES.forEach(n => { n.x = DEFAULT_POS[n.id].x; n.y = DEFAULT_POS[n.id].y; placeNode(n); });
+  placeOrbits(); updateEdges(); deselect(); applyView(true);
+});
+
+canvas.addEventListener("wheel", e => {
+  e.preventDefault();
+  zoomAt(e.clientX, e.clientY, zoom * Math.exp(-e.deltaY * 0.0015), false);
+}, { passive:false });
+
+/* ---------- pointer: drag nodes, pan background, click to select ---------- */
+let gesture = null;
+
+NODES.forEach(n => {
+  n.el.addEventListener("pointerdown", e => {
+    if (e.button !== 0) return;
+    e.stopPropagation();
+    n.el.setPointerCapture(e.pointerId);
+    gesture = { kind:"node", node:n, sx:e.clientX, sy:e.clientY, ox:n.x, oy:n.y, moved:false };
+  });
+  n.el.addEventListener("keydown", e => {
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); select(n.id); }
+  });
+});
+
+canvas.addEventListener("pointerdown", e => {
+  if (e.button !== 0 || e.target.closest(".node")) return;
+  canvas.setPointerCapture(e.pointerId);
+  gesture = { kind:"pan", sx:e.clientX, sy:e.clientY, otx:tx, oty:ty, moved:false };
+});
+
+window.addEventListener("pointermove", e => {
+  if (!gesture) return;
+  const dx = e.clientX - gesture.sx, dy = e.clientY - gesture.sy;
+  if (!gesture.moved) {
+    if (Math.hypot(dx, dy) < 4) return; // small jitter still counts as a click
+    gesture.moved = true;
+    if (gesture.kind === "node") gesture.node.el.classList.add("dragging");
+    else canvas.classList.add("panning");
+  }
+  if (gesture.kind === "node") {
+    const n = gesture.node, s = scale();
+    n.x = clamp(gesture.ox + dx / s, 80, W - 80);
+    n.y = clamp(gesture.oy + dy / s, 40, H - 40);
+    placeNode(n);
+    if (n.id === ORBIT_CENTER) placeOrbits();
+    updateEdges();
+  } else {
+    tx = gesture.otx + dx; ty = gesture.oty + dy;
+    applyView(false);
+  }
+});
+
+function endGesture(e) {
+  if (!gesture) return;
+  const g = gesture;
+  gesture = null;
+  canvas.classList.remove("panning");
+  if (g.kind === "node") g.node.el.classList.remove("dragging");
+  if (e.type === "pointerup" && !g.moved) {
+    if (g.kind === "node") select(g.node.id); else deselect();
+  }
+}
+window.addEventListener("pointerup", endGesture);
+window.addEventListener("pointercancel", endGesture);
+
+/* ---------- selection + details panel ---------- */
+let selected = null;
+
+function connectionsOf(id) {
+  return EDGES.filter(e => e.from === id || e.to === id).map(e => {
+    const other = e.from === id ? e.to : e.from;
+    let arrow = "↔";
+    if (e.flow === "one") arrow = e.from === id ? "→" : "←";
+    if (e.flow === "none") arrow = "○";
+    if (e.flow === "inactive") arrow = "⋯";
+    return { other: byId[other], arrow, edge: e };
+  });
+}
+
+function select(id) {
+  const n = byId[id];
+  selected = id;
+  const conns = connectionsOf(id);
+  const linked = new Set([id, ...conns.map(c => c.other.id)]);
+
+  NODES.forEach(x => {
+    x.el.classList.toggle("selected", x.id === id);
+    x.el.classList.toggle("dim", !linked.has(x.id));
+  });
+  EDGES.forEach(e => {
+    const on = e.from === id || e.to === id;
+    e.g.classList.toggle("active", on);
+    e.g.classList.toggle("dim", !on);
+  });
+
+  $("pKicker").textContent = KIND_LABEL[n.kind] || "Platform details";
+  $("pTitle").textContent = n.name;
+  $("pDesc").textContent = n.desc;
+  const host = $("pConnections");
+  host.innerHTML = "";
+  conns.forEach(c => {
+    const row = document.createElement("div");
+    row.className = "conn";
+    row.style.setProperty("--ec", edgeColor(c.edge));
+    const f = c.edge.flow, src = byId[c.edge.from].name, dst = byId[c.edge.to].name;
+    const base = f === "one" ? `${src} → ${dst}` : FLOW[f].label;
+    const flowText = c.edge.manual ? `Manual, ${f === "one" ? base : "bidirectional"}` : (f === "one" ? `One-way, ${base}` : base);
+    row.innerHTML = `<span class="conn-arrow"></span><span><span class="conn-name"></span><span class="conn-note"></span>${c.edge.note ? '<span class="conn-note warn"></span>' : ""}</span>`;
+    row.querySelector(".conn-arrow").textContent = c.arrow;
+    row.querySelector(".conn-name").textContent = c.other.name;
+    row.querySelectorAll(".conn-note")[0].textContent = `${c.other.type} · ${flowText}`;
+    if (c.edge.note) row.querySelector(".conn-note.warn").textContent = c.edge.note;
+    row.addEventListener("click", () => select(c.other.id));
+    host.appendChild(row);
+  });
+  if (!conns.length) {
+    const row = document.createElement("div");
+    row.className = "conn";
+    row.style.cursor = "default";
+    row.innerHTML = '<span class="conn-arrow">○</span><span class="conn-note" style="margin-top:0">No integrations</span>';
+    host.appendChild(row);
+  }
+  panel.classList.add("open");
+}
+
+function deselect() {
+  selected = null;
+  panel.classList.remove("open");
+  NODES.forEach(x => x.el.classList.remove("selected", "dim"));
+  EDGES.forEach(e => e.g.classList.remove("active", "dim"));
+}
+
+$("close").addEventListener("click", deselect);
+document.addEventListener("keydown", e => { if (e.key === "Escape") deselect(); });
+
+/* ---------- starfield ---------- */
+const sc = $("stars"), ctx = sc.getContext("2d");
+let stars = [];
+function resizeStars() {
+  const dpr = window.devicePixelRatio || 1;
+  sc.width = innerWidth * dpr; sc.height = innerHeight * dpr;
+  sc.style.width = innerWidth + "px"; sc.style.height = innerHeight + "px";
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const count = Math.round(innerWidth * innerHeight / 11000);
+  stars = Array.from({ length: count }, () => ({ x:Math.random() * innerWidth, y:Math.random() * innerHeight, r:Math.random() * 1.1 + .2, a:Math.random() * .5 + .12, p:Math.random() * 6.28 }));
+  if (reduceMotion) drawStars(0);
+}
+function drawStars(t) {
+  ctx.clearRect(0, 0, innerWidth, innerHeight);
+  for (const s of stars) {
+    const a = reduceMotion ? s.a : s.a * (.62 + .38 * Math.sin(t * .0007 + s.p));
+    ctx.fillStyle = `rgba(164,211,255,${a})`;
+    ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2); ctx.fill();
+  }
+}
+function starLoop(t) { drawStars(t); requestAnimationFrame(starLoop); }
+
+/* ---------- init ---------- */
+let resizeRaf = 0;
+window.addEventListener("resize", () => {
+  cancelAnimationFrame(resizeRaf);
+  resizeRaf = requestAnimationFrame(() => { computeFit(); applyView(false); resizeStars(); });
+});
+
+NODES.forEach(placeNode);
+placeOrbits();
+updateEdges();
+computeFit();
+applyView(false);
+resizeStars();
+if (!reduceMotion) { requestAnimationFrame(tick); requestAnimationFrame(starLoop); }
+})();
+</script>
+</body>
+</html>

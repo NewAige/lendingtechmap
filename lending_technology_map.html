@@ -282,15 +282,15 @@ const NODES = [
 
   // ── Small business lending (above core) ──
   { id:"numerated",   name:"Numerated",        type:"Small business hub", tag:"HUB",     icon:"NU", kind:"smallbiz", unit:"smallbiz",
-    x:1120, y:225,  desc:"Small business lending hub. Receives data from LexisNexis, Dun & Bradstreet and Experian, exchanges data with DocuSign and its point of sale, sends data to iDentifi, and reaches COCC through a manual process." },
+    x:1120, y:225,  desc:"Small business lending hub. Receives data from LexisNexis, Dun & Bradstreet and Experian (LexisNexis and Dun & Bradstreet also feed Global Wave manually), exchanges data with DocuSign and its point of sale, sends data to iDentifi, and reaches COCC through a manual process." },
   { id:"docusign",    name:"DocuSign",         type:"E-signature",        icon:"DS", kind:"integration", unit:"smallbiz",
     x:890, y:225,   desc:"E-signature. Exchanges data with Numerated (bidirectional)." },
   { id:"numpos",      name:"Numerated POS",    type:"Point of sale",      icon:"PS", kind:"integration", unit:"smallbiz",
     x:1350, y:225,  desc:"Small business point of sale. Exchanges data with Numerated (bidirectional)." },
-  { id:"lexisnexis",  name:"LexisNexis",       type:"Data provider",      icon:"LN", kind:"integration", unit:"smallbiz",
-    x:890, y:105,   desc:"Sends data to Numerated (one-way)." },
-  { id:"dnb",         name:"Dun & Bradstreet", type:"Business credit",    icon:"DB", kind:"integration", unit:"smallbiz",
-    x:1120, y:105,  desc:"Sends data to Numerated (one-way)." },
+  { id:"lexisnexis",  name:"LexisNexis",       type:"Data provider",      icon:"LN", kind:"integration", unit:["smallbiz", "commercial"],
+    x:890, y:105,   desc:"Sends data to Numerated (one-way), and reaches Global Wave through a manual process (one-way)." },
+  { id:"dnb",         name:"Dun & Bradstreet", type:"Business credit",    icon:"DB", kind:"integration", unit:["smallbiz", "commercial"],
+    x:1120, y:105,  desc:"Sends data to Numerated (one-way), and reaches Global Wave through a manual process (one-way)." },
   { id:"experiansb",  name:"Experian",         type:"Credit bureau",      icon:"EX", kind:"integration", unit:"smallbiz",
     x:1350, y:105,  desc:"Sends data to Numerated (one-way). Shown separately from the indirect lending Experian connection." },
 
@@ -312,23 +312,23 @@ const NODES = [
 
   // ── Commercial lending (left of core) ──
   { id:"globalwave",  name:"Global Wave",      type:"Commercial hub",     tag:"HUB",     icon:"GW", kind:"commercial", unit:"commercial",
-    x:390, y:390,   desc:"Commercial lending hub. Many commercial processes are manual. Receives a one-way data dump from COCC, receives CoStar, Warren Group and Xactus (credit reports, flood certs) data manually, exchanges data with ValueLink manually, and data reaches LaserPro for loan documents through a manual step." },
+    x:390, y:215,   desc:"Commercial lending hub. Many commercial processes are manual. Receives a one-way data dump from COCC, receives CoStar, Warren Group, LexisNexis, Dun & Bradstreet and Xactus (credit reports, flood certs) data manually, exchanges data with ValueLink manually, and data reaches LaserPro for loan documents through a manual step." },
   { id:"costar",      name:"CoStar",           type:"Data source",        icon:"✋", kind:"integration", unit:"commercial",
-    x:150, y:280,   desc:"Commercial real estate data. Reaches Global Wave through a manual process (one-way)." },
+    x:150, y:105,   desc:"Commercial real estate data. Reaches Global Wave through a manual process (one-way)." },
   { id:"xactusc",     name:"Xactus",           type:"Credit & flood",     icon:"✋", kind:"integration", unit:"commercial",
-    x:150, y:500,   desc:"Commercial: credit reports and flood certs. Reaches Global Wave through a manual process (one-way). Same vendor as the residential Xactus integration." },
+    x:150, y:325,   desc:"Commercial: credit reports and flood certs. Reaches Global Wave through a manual process (one-way). Same vendor as the residential Xactus integration." },
   { id:"valuelinkc",  name:"ValueLink",        type:"Appraisal mgmt",     icon:"✋", kind:"integration", unit:"commercial",
-    x:390, y:280,   desc:"Appraisal management software. Manual process with Global Wave, data flowing both ways. Same vendor as the residential ValueLink integration." },
+    x:390, y:105,   desc:"Appraisal management software. Manual process with Global Wave, data flowing both ways. Same vendor as the residential ValueLink integration." },
   { id:"warren",      name:"Warren Group",     type:"Data source",        icon:"✋", kind:"integration", unit:"commercial",
-    x:150, y:390,   desc:"Real estate and property data. Reaches Global Wave through a manual process (one-way)." },
+    x:150, y:215,   desc:"Real estate and property data. Reaches Global Wave through a manual process (one-way)." },
   { id:"laserpro",    name:"LaserPro",         type:"Loan documents",     icon:"LP", kind:"integration", unit:"commercial",
-    x:390, y:500,   desc:"Commercial loan documents. Receives data from Global Wave (manual), sends data to LenderLink, and documents reach iDentifi through manual imaging." },
+    x:390, y:325,   desc:"Commercial loan documents. Receives data from Global Wave (manual), sends data to LenderLink, and documents reach iDentifi through manual imaging." },
   { id:"lenderlinkc", name:"LenderLink",       type:"Middleware · commercial", icon:"LL", kind:"integration", unit:"commercial",
-    x:620, y:280,   desc:"Commercial lending's LenderLink instance (separate from indirect). Carries LaserPro data into COCC (one-way)." },
+    x:620, y:325,   desc:"Commercial lending's LenderLink instance (separate from indirect). Carries LaserPro data into COCC (one-way)." },
 
-  // ── Construction (own box, top left) ──
+  // ── Construction (own box, below commercial) ──
   { id:"built",       name:"Built",            type:"Construction mgmt",  tag:"SHARED",  icon:"BU", kind:"construction", unit:["construction", "commercial", "residential"],
-    x:380, y:105,   desc:"Construction loan management, shared by commercial and residential lending. Receives data from COCC (one-way). Has an API connection to VeraPath that is not active yet." },
+    x:380, y:490,   desc:"Construction loan management, shared by commercial and residential lending. Receives data from COCC (one-way). Has an API connection to VeraPath that is not active yet." },
 
   // ── Residential mortgage (right of core) ──
   { id:"elink",       name:"eLink",            type:"Middleware · residential", icon:"↔", kind:"integration", unit:"residential",
@@ -393,10 +393,12 @@ const EDGES = [
   { from:"costar",         to:"globalwave",  flow:"one",  manual:true, note:"Manual data source" },
   { from:"warren",         to:"globalwave",  flow:"one",  manual:true, note:"Manual data source" },
   { from:"globalwave",     to:"laserpro",    flow:"one",  manual:true, note:"Loan documents" },
-  { from:"laserpro",       to:"lenderlinkc", flow:"one",  c1:[150, 0], c2:[0, 110] },
+  { from:"laserpro",       to:"lenderlinkc", flow:"one" },
   { from:"lenderlinkc",    to:"cocc",        flow:"one" },
-  { from:"laserpro",       to:"identifi",    flow:"one",  manual:true, note:"Manual imaging of documents" },
+  { from:"laserpro",       to:"identifi",    flow:"one",  manual:true, note:"Manual imaging of documents", c1:[0, 120], c2:[-300, 0] },
   { from:"cocc",           to:"globalwave",  flow:"one",  note:"Data dump" },
+  { from:"lexisnexis",     to:"globalwave",  flow:"one",  manual:true, note:"Manual data source" },
+  { from:"dnb",            to:"globalwave",  flow:"one",  manual:true, note:"Manual data source", c1:[0, 60], c2:[300, 0] },
 
   { from:"cocc",           to:"built",       flow:"one" },
   { from:"identifi",       to:"cocc",        flow:"both" },
@@ -416,7 +418,7 @@ const EDGES = [
   { from:"encompass",      to:"verapath",    flow:"inactive", note:"API · OpenAPI config ready", c1:[-100, 150], c2:[0, -150] },
   { from:"cocc",           to:"verapath",    flow:"inactive", note:"API read · not active", c1:[0, 220], c2:[-300, -40] },
   { from:"decisionlender", to:"verapath",    flow:"inactive", note:"API · OpenAPI config ready" },
-  { from:"built",          to:"verapath",    flow:"inactive", note:"API · not active", via:[[750, 105], [750, 960], [1750, 960]] },
+  { from:"built",          to:"verapath",    flow:"inactive", note:"API · not active", via:[[750, 490], [750, 960], [1750, 960]] },
   { from:"enact",          to:"encompass",   flow:"both" },
   { from:"mgic",           to:"encompass",   flow:"both" },
   { from:"oldrepublic",    to:"encompass",   flow:"one",  manual:true }
@@ -433,8 +435,8 @@ const edgeColor = e => e.manual ? MANUAL_COLOR : FLOW[e.flow].color;
 
 // Lanes are the shaded boxes around each business unit
 const LANES = [
-  { label:"Construction",                  x:30,   y:40,  w:700, h:130, units:["construction"] },
-  { label:"Commercial lending",            x:30,   y:215, w:700, h:345, units:["commercial"] },
+  { label:"Construction",                  x:30,   y:425, w:700, h:130, units:["construction"] },
+  { label:"Commercial lending",            x:30,   y:40,  w:700, h:345, units:["commercial"] },
   { label:"Consumer lending",              x:30,   y:600, w:700, h:340, units:["consumer"] },
   { label:"Small business lending",        x:770,  y:40,  w:700, h:250, units:["smallbiz"] },
   { label:"Core banking",                  x:940,  y:335, w:530, h:225, units:["core"] },

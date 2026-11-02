@@ -23,12 +23,13 @@ Open `lending_technology_map.html` in a browser. It works from `file://`, so no 
 - **Node**: `{ id, name, type, tag?, icon, kind, unit, x, y, desc }`
   - `kind` sets the colour and style: `core | mortgage | commercial | consumer | indirect | smallbiz | storage | construction | ai | integration`.
   - `unit` is the business unit(s) used by the filter. It's a single id or an array (e.g. Built is `["construction", "commercial", "residential"]`). Each id must exist in `UNITS`.
-  - `x`/`y` are positions in the 2440 × 1780 world. COCC is at the centre (1220, 820). Place a node inside its unit's lane box.
+  - `x`/`y` are positions in the 2240 × 980 world, laid out as three 700-wide columns (commercial and consumer on the left, small business, core and indirect in the centre, residential and AI on the right). COCC is at (1120, 420). Place a node inside its unit's lane box. Keep the grid: nodes in a row are 230 apart and rows about 110 apart.
   - The same vendor used by two units gets two nodes with different ids (e.g. `xactus` / `xactusc`, `experian` / `experiansb`). Say so in `desc`.
-- **Edge**: `{ from, to, flow, manual?, note?, bend?, c1?, c2? }`
+- **Edge**: `{ from, to, flow, manual?, note?, bend?, c1?, c2?, via? }`
   - `flow`: `both | one | none | inactive`. For `one`, data moves from `from` to `to`.
   - `manual: true` draws a pink dashed line for a manual process.
   - `c1`/`c2` are optional control-point offsets for hand-tuned curves.
+  - `via: [[x, y], ...]` routes a long line through world waypoints with rounded corners (e.g. Built → VeraPath runs around the bottom of the map). Use it when a curve would otherwise pass under an unrelated node.
 - **Lane / caption**: each has `units: [...]` so it hides when those units are filtered out.
 - When you add a node or connection, update the descriptions (`desc`) of the hub or core nodes it connects to as well. They describe their connections in prose.
 

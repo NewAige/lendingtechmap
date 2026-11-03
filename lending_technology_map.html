@@ -181,6 +181,70 @@ footer{height:31px;flex-shrink:0;border-top:1px solid #ffffff0d;padding:0 32px;d
   .controls{right:12px;bottom:10px}
   footer{padding:0 16px}
 }
+/* Print sheet: built on demand from the live map, shown only when printing */
+.print-sheet{display:none}
+.btn svg{width:13px;height:13px;vertical-align:-2px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linejoin:round}
+@page{size:landscape;margin:8mm}
+@media print{
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  html,body{height:auto;overflow:visible;background:#fff;color:#0d1b2a}
+  .app,#stars{display:none!important}
+  .print-sheet{display:block;--ink:#0d1b2a;--soft:#5a6b7d;--rule:#d9e0e8;font-size:9px;color:var(--ink)}
+  .p-page{break-after:page;display:flex;flex-direction:column;gap:10px}
+  .p-page:last-child{break-after:auto}
+  .p-head{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;padding-bottom:8px;border-bottom:2px solid var(--ink)}
+  .p-brand{display:flex;align-items:center;gap:10px}
+  .p-brand .logo{width:30px;height:30px;border-radius:9px;font-size:15px;box-shadow:none}
+  .p-eyebrow{font-size:7.5px;letter-spacing:.18em;text-transform:uppercase;color:#0f8f83;font-weight:700}
+  .p-head h1{margin:2px 0 1px;font-size:19px;letter-spacing:-.02em}
+  .p-head p{margin:0;color:var(--soft);font-size:9px}
+  .p-meta{text-align:right;font-size:8.5px;color:var(--soft);line-height:1.6;white-space:nowrap}
+  .p-meta b{color:var(--ink);font-weight:650}
+  .p-map{position:relative;overflow:hidden;contain:strict;margin:0 auto;border:1px solid var(--rule);border-radius:10px;background:#fbfcfe}
+  .p-map .world{position:absolute;left:0;top:0;transform-origin:0 0;will-change:auto}
+  .p-map .lane{fill:#eef3f8;stroke:#c3cfdc;stroke-dasharray:4 6}
+  .p-map .lane-label{fill:#4b5d70;font-size:14px}
+  .p-map .caption{fill:#7a8b9c;font-size:11px}
+  .p-map .link{opacity:1;stroke-width:2.4}
+  .p-map .is-manual .link.main{stroke-width:2.6}
+  .p-map .f-inactive .link.main{opacity:.9}
+  .p-map .chev{stroke-width:2.4}
+  .p-map .node-core{background:#fff;border:1.5px solid var(--kc,#c9d3df);box-shadow:0 1px 3px #0d1b2a1f;min-width:166px}
+  .p-map .node-name{font-size:15px;color:var(--ink)}
+  .p-map .node-type{font-size:11.5px;color:var(--soft)}
+  .p-map .tag,.p-dir .tag{color:var(--kt,#3b4b5c)!important;border-color:var(--kc,#c9d3df)!important;background:#fff!important;font-weight:700}
+  .k-core{--kc:#4fc9c0;--kt:#0c7d75}.k-mortgage{--kc:#8f86f5;--kt:#4b48c4}.k-commercial{--kc:#f0a85a;--kt:#a85a12}
+  .k-consumer{--kc:#ef8bb3;--kt:#b2366c}.k-storage{--kc:#97aac0;--kt:#4b5f76}.k-construction{--kc:#c9a172;--kt:#7f5626}
+  .k-indirect{--kc:#a9cc52;--kt:#55731a}.k-smallbiz{--kc:#4fcf92;--kt:#16804f}.k-ai{--kc:#a796f5;--kt:#6a43c9}
+  .print-sheet .k-integration .node-icon{background:#e9f7f5;color:#0f7f74;border:1px solid #9ad8d0}
+  .p-map .unlinked .node-core{border-style:dashed}
+  .p-legend{display:grid;grid-template-columns:1.15fr 1.55fr 1fr;gap:18px;padding-top:9px;border-top:1px solid var(--rule);break-inside:avoid}
+  .p-legend h3,.p-dir h2{font-size:7.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--soft);margin:0 0 6px;font-weight:700}
+  .p-row{display:flex;align-items:flex-start;gap:8px;margin-bottom:5px;line-height:1.35}
+  .p-row b{display:block;font-size:9px}
+  .p-row span{color:var(--soft);font-size:8px}
+  .p-row svg{flex-shrink:0;margin-top:2px}
+  .p-kinds{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}
+  .p-sw{width:13px;height:13px;border-radius:4px;flex-shrink:0;margin-top:1px}
+  .p-notes{margin:0;padding-left:12px;color:var(--soft);font-size:8px;line-height:1.45}
+  .p-notes li{margin-bottom:4px}
+  .p-foot{display:flex;justify-content:space-between;color:#8494a5;font-size:7px;letter-spacing:.1em;text-transform:uppercase;padding-top:6px;border-top:1px solid var(--rule)}
+  .p-dir{display:block}.p-dir .p-head{margin-bottom:6px}
+  .p-dir h2{font-size:12px;letter-spacing:.02em;text-transform:none;color:var(--ink);margin:0}
+  .p-unit{break-inside:auto;margin-top:4px}
+  .p-unit h3{display:flex;align-items:center;gap:7px;font-size:10px;margin:8px 0 4px;letter-spacing:.06em;text-transform:uppercase}
+  .p-unit h3 i{width:9px;height:9px;border-radius:50%}
+  .p-dir table{width:100%;border-collapse:collapse;table-layout:fixed}
+  .p-dir td{vertical-align:top;padding:4px 6px;border-top:1px solid var(--rule);font-size:8.3px;line-height:1.4}
+  .p-dir tr{break-inside:avoid}
+  .p-dir td:first-child{width:20%}.p-dir td:last-child{width:32%;color:var(--soft)}
+  .p-sys{display:flex;align-items:center;gap:7px}
+  .p-sys .node-icon{width:20px;height:20px;border-radius:6px;font-size:7.5px}
+  .p-sys b{display:block;font-size:9px}
+  .p-sys small{color:var(--soft);font-size:7.5px}
+  .p-conn{display:inline-block;margin-right:10px;white-space:nowrap}
+  .p-conn em{font-style:normal;font-weight:700;margin-right:4px}
+}
 @media (prefers-reduced-motion:reduce){
   .grid,.orbit.two,.pulse{animation:none}
   .pulse{display:none}
@@ -192,7 +256,7 @@ footer{height:31px;flex-shrink:0;border-top:1px solid #ffffff0d;padding:0 32px;d
 <div class="app">
   <header class="topbar">
     <div class="brand"><div class="logo">✳</div><div><div class="brand-title">Integration Atlas</div><div class="brand-sub">Lending technology map</div></div></div>
-    <div class="top-right"><div class="live"><i></i>Network view</div><button class="btn" id="download" aria-label="Download map" title="Download this map as a single HTML file you can open offline or share">⤓<span class="btn-text"> &nbsp;Download</span></button><button class="btn" id="reset" aria-label="Reset view" title="Reset filters, zoom, pan and node positions">⌂<span class="btn-text"> &nbsp;Reset view</span></button></div>
+    <div class="top-right"><div class="live"><i></i>Network view</div><button class="btn" id="print" aria-label="Print map" title="Print a clean, light version of the map with a legend and systems directory, or save it as a PDF"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6V2h8v4M4 12H2.5V6.5h11V12H12M4 9.5h8V14H4z"/></svg><span class="btn-text"> &nbsp;Print</span></button><button class="btn" id="download" aria-label="Download map" title="Download this map as a single HTML file you can open offline or share">⤓<span class="btn-text"> &nbsp;Download</span></button><button class="btn" id="reset" aria-label="Reset view" title="Reset filters, zoom, pan and node positions">⌂<span class="btn-text"> &nbsp;Reset view</span></button></div>
   </header>
   <main>
     <div class="heading"><div class="eyebrow">Systems landscape / 01</div><h1>Lending technology map</h1><p>Consumer, indirect, small business, commercial and residential lending around the core and their integrations.</p></div>
@@ -243,6 +307,7 @@ footer{height:31px;flex-shrink:0;border-top:1px solid #ffffff0d;padding:0 32px;d
   </main>
   <footer><span>Integration Atlas &nbsp;·&nbsp; Architecture overview</span><span id="counts"></span></footer>
 </div>
+<div class="print-sheet" id="printSheet" aria-hidden="true"></div>
 
 <script>
 (() => {
@@ -888,6 +953,159 @@ $("download").addEventListener("click", async () => {
   a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 });
+
+/* ---------- print: a clean, light sheet for sharing outside the bank ---------- */
+// Built from the live map each time (current filter and node positions), then
+// shown only by the print stylesheet. Page 1 is the map and legend, then a directory.
+const PRINT_COLOR = { both:"#12a191", one:"#4f6be6", manual:"#d6428c", inactive:"#8a9aac", none:"#8a9aac" };
+const printColor = e => e.manual ? PRINT_COLOR.manual : PRINT_COLOR[e.flow];
+const KIND_INFO = {
+  core:         ["Core banking", "System of record for accounts and loans"],
+  mortgage:     ["Mortgage", "Residential mortgage origination"],
+  commercial:   ["Commercial", "Commercial loan origination"],
+  consumer:     ["Consumer", "Consumer loan origination"],
+  indirect:     ["Indirect", "Dealer-originated auto lending"],
+  smallbiz:     ["Small business", "Small business loan origination"],
+  construction: ["Construction", "Construction loan administration"],
+  storage:      ["Cold storage", "Document and record archive"],
+  ai:           ["AI", "AI platform"],
+  integration:  ["Integration", "Vendor, partner or data service"]
+};
+const FLOW_INFO = [
+  { key:"both",     label:"Bidirectional",    text:"Automated integration; data moves both ways." },
+  { key:"one",      label:"One-way",          text:"Automated feed in the direction of the arrow." },
+  { key:"manual",   label:"Manual process",   text:"Data is moved by hand (re-keying, imaging or upload)." },
+  { key:"inactive", label:"Not active (API)", text:"Connection is available or planned but not in use." },
+  { key:"none",     label:"No integration",   text:"Related systems with no data exchange." }
+];
+const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+const lineSample = key => {
+  const svg = svgEl("svg", { width:34, height:10, viewBox:"0 0 34 10" });
+  const dash = { manual:"6 4", inactive:"5 5", none:"1.5 5" }[key];
+  svg.appendChild(svgEl("line", { x1:1, y1:5, x2:33, y2:5, stroke:PRINT_COLOR[key], "stroke-width":2.4, "stroke-linecap":"round", ...(dash ? { "stroke-dasharray":dash } : {}) }));
+  if (key === "one") svg.appendChild(svgEl("path", { d:"M 15 1.5 L 20 5 L 15 8.5", fill:"none", stroke:PRINT_COLOR.one, "stroke-width":2, "stroke-linecap":"round", "stroke-linejoin":"round" }));
+  return svg;
+};
+const kindSwatch = k => {
+  const v = { core:"core", mortgage:"mort", commercial:"comm", consumer:"cons-hub", storage:"stor", construction:"cons", indirect:"ind", smallbiz:"sb", ai:"ai" }[k];
+  const sw = el("i", "p-sw");
+  sw.style.background = v ? `linear-gradient(140deg,var(--${v}-a),var(--${v}-b))` : "#e9f7f5";
+  if (!v) sw.style.border = "1px solid #9ad8d0";
+  return sw;
+};
+
+function buildPrint() {
+  const sheet = $("printSheet");
+  sheet.textContent = "";
+  const vis = NODES.filter(n => !n.el.classList.contains("filtered-out"));
+  const visEdges = EDGES.filter(e => !e.g.classList.contains("filtered-out"));
+  const visIds = new Set(vis.map(n => n.id));
+  const unitNames = [...activeUnits].map(u => UNITS.find(x => x.id === u).label);
+  const date = new Date().toLocaleDateString(undefined, { year:"numeric", month:"long", day:"numeric" });
+  const header = () => {
+    const h = el("header", "p-head"), brand = el("div", "p-brand"), txt = el("div"), meta = el("div", "p-meta");
+    brand.append(el("div", "logo", "✳"), txt);
+    txt.append(el("div", "p-eyebrow", "Integration Atlas · Systems landscape"), el("h1", null, "Lending technology map"),
+      el("p", null, "Consumer, indirect, small business, commercial and residential lending around the core and their integrations."));
+    const view = el("div"); view.append("View: "); view.appendChild(el("b", null, unitNames.length ? unitNames.join(", ") : "All business units"));
+    meta.append(view, el("div", null, `${vis.length} systems · ${visEdges.length} connections`), el("div", null, date));
+    h.append(brand, meta);
+    return h;
+  };
+  const footer = page => { const f = el("footer", "p-foot"); f.append(el("span", null, "Integration Atlas · Lending technology map"), el("span", null, page)); return f; };
+
+  // Page 1: map
+  const page1 = el("section", "p-page");
+  const bounds = [Infinity, Infinity, -Infinity, -Infinity];
+  const grow = (x0, y0, x1, y1) => { bounds[0] = Math.min(bounds[0], x0); bounds[1] = Math.min(bounds[1], y0); bounds[2] = Math.max(bounds[2], x1); bounds[3] = Math.max(bounds[3], y1); };
+  LANES.filter(l => !l.g.classList.contains("filtered-out")).forEach(l => grow(l.x, l.y - 34, l.x + l.w, l.y + l.h));
+  vis.forEach(n => grow(n.x - 105, n.y - 45, n.x + 105, n.y + 45));
+  const pad = 18, bx = bounds[0] - pad, by = bounds[1] - pad, bw = bounds[2] - bounds[0] + pad * 2, bh = bounds[3] - bounds[1] + pad * 2;
+  const s = Math.min(990 / bw, 455 / bh);
+  const map = el("div", "p-map");
+  map.style.width = bw * s + "px"; map.style.height = bh * s + "px";
+  const clone = world.cloneNode(true);
+  clone.querySelectorAll(".edge").forEach((g, i) => g.style.setProperty("--ec", printColor(EDGES[i])));
+  clone.querySelectorAll(".halo,.orbit,.particle,.pulse,.link.glow,.link.back,.filtered-out").forEach(x => x.remove());
+  clone.querySelectorAll(".dim,.selected,.active,.dragging").forEach(x => x.classList.remove("dim", "selected", "active", "dragging"));
+  clone.querySelectorAll("[id]").forEach(x => x.removeAttribute("id"));
+  clone.querySelectorAll("[tabindex]").forEach(x => x.removeAttribute("tabindex"));
+  clone.removeAttribute("id");
+  clone.className = "world";
+  clone.style.transform = `scale(${s}) translate(${-bx}px, ${-by}px)`;
+  map.appendChild(clone);
+
+  // Legend
+  const legend = el("div", "p-legend");
+  const flows = new Set(visEdges.map(e => e.manual ? "manual" : e.flow));
+  const colA = el("div"); colA.appendChild(el("h3", null, "Connections"));
+  FLOW_INFO.filter(f => flows.has(f.key)).forEach(f => {
+    const r = el("div", "p-row"), t = el("div");
+    t.append(el("b", null, f.label), el("span", null, f.text));
+    r.append(lineSample(f.key), t);
+    colA.appendChild(r);
+  });
+  const kinds = new Set(vis.map(n => n.kind));
+  const colB = el("div"), grid = el("div", "p-kinds"); colB.append(el("h3", null, "System types"), grid);
+  Object.keys(KIND_INFO).filter(k => kinds.has(k)).forEach(k => {
+    const r = el("div", "p-row"), t = el("div");
+    t.append(el("b", null, KIND_INFO[k][0]), el("span", null, KIND_INFO[k][1]));
+    r.append(kindSwatch(k), t);
+    grid.appendChild(r);
+  });
+  const colC = el("div"), notes = el("ul", "p-notes"); colC.append(el("h3", null, "Reading the map"), notes);
+  [
+    "Shaded panels group systems by business unit.",
+    "Coloured icons mark each unit's main platform; tags such as HUB and CORE name its role.",
+    "Arrows on one-way lines show the direction data moves.",
+    "A vendor used by two units appears once in each unit.",
+    ...(unitNames.length && vis.some(n => n.el.classList.contains("ghost")) ? ["Faded systems sit outside the selected units but connect to them."] : []),
+    "System details and connections are listed on the following pages."
+  ].forEach(t => notes.appendChild(el("li", null, t)));
+  legend.append(colA, colB, colC);
+  page1.append(header(), map, legend, footer("Map and legend"));
+  sheet.appendChild(page1);
+
+  // Following pages: systems directory grouped by business unit
+  const page2 = el("section", "p-page p-dir");
+  const dh = el("div", "p-head"), dt = el("div");
+  dt.append(el("div", "p-eyebrow", "Integration Atlas · Lending technology map"), el("h2", null, "Systems directory"));
+  dh.append(dt, el("div", "p-meta", date));
+  page2.appendChild(dh);
+  const ARROW = { both:"↔", none:"○", inactive:"⋯" };
+  [...UNITS].sort((a, b) => (b.id === CONTEXT_UNIT) - (a.id === CONTEXT_UNIT)).forEach(u => {
+    const group = vis.filter(n => n.units[0] === u.id).sort((a, b) => (a.kind === "integration") - (b.kind === "integration"));
+    if (!group.length) return;
+    const sec = el("div", "p-unit"), h = el("h3"), dot = el("i"), table = el("table"), body = el("tbody");
+    dot.style.background = u.color;
+    h.append(dot, u.label);
+    group.forEach(n => {
+      const tr = el("tr"), sys = el("div", `p-sys k-${n.kind}`), names = el("div"), conns = el("td");
+      const icon = el("div", "node-icon", n.icon);
+      names.append(el("b", null, n.name), el("small", null, n.tag ? `${n.type} · ${n.tag}` : n.type));
+      sys.append(icon, names);
+      const td1 = el("td"); td1.appendChild(sys);
+      connectionsOf(n.id).filter(c => visIds.has(c.other.id) && visEdges.includes(c.edge)).forEach(c => {
+        const row = el("span", "p-conn"), arrow = el("em", null, c.edge.flow === "one" ? (c.edge.from === n.id ? "→" : "←") : ARROW[c.edge.flow]);
+        arrow.style.color = printColor(c.edge);
+        const extra = [c.edge.manual && "manual", c.edge.flow === "inactive" && "not active"].filter(Boolean).join(", ");
+        row.append(arrow, c.other.name + (extra ? ` (${extra})` : ""));
+        conns.appendChild(row);
+      });
+      if (!conns.childNodes.length) conns.textContent = "No integrations";
+      tr.append(td1, el("td", null, n.desc), conns);
+      body.appendChild(tr);
+    });
+    table.appendChild(body);
+    sec.append(h, table);
+    page2.appendChild(sec);
+  });
+  page2.appendChild(footer("Systems directory"));
+  sheet.appendChild(page2);
+}
+
+$("print").addEventListener("click", () => window.print());
+window.addEventListener("beforeprint", buildPrint);
 
 /* ---------- starfield ---------- */
 const sc = $("stars"), ctx = sc.getContext("2d");

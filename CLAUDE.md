@@ -13,10 +13,11 @@ Open `lending_technology_map.html` in a browser. It works from `file://`, so no 
 ## File layout
 
 1. `<style>`: all CSS. Colour tokens are on `:root` (`--core-a/b`, `--mort-a/b`, etc.). The mobile layout is under `@media (max-width:750px)`.
-2. Markup: topbar (Download, Reset), heading, filter bar (`#filters`), canvas/world, details panel, legend, zoom controls, footer.
+2. Markup: topbar (Print, Download, Reset), heading, filter bar (`#filters`), canvas/world, details panel, legend, zoom controls, footer, and the empty `#printSheet`.
 3. `<script>`: one IIFE.
    - **DATA section** (between the `====` banners): `NODES`, `EDGES`, `FLOW`, `LANES`, `CAPTIONS`, `UNITS`, `KIND_LABEL`. Most content changes only touch this section.
-   - Everything below the banner is rendering and interaction: lanes, nodes, edges with animated particles, pan/zoom/drag, selection panel, business unit filter, download, starfield.
+   - Everything below the banner is rendering and interaction: lanes, nodes, edges with animated particles, pan/zoom/drag, selection panel, business unit filter, print, download, starfield.
+   - **Print**: `buildPrint()` runs on `beforeprint` (so the button and Ctrl/Cmd+P both work). It fills `#printSheet` with a light landscape sheet: a clone of the current map (respecting the filter and dragged positions) with a legend, then a systems directory grouped by business unit. Only the `@media print` styles show it. Print colours for connections are in `PRINT_COLOR`, and the legend text for system types and connections is in `KIND_INFO` / `FLOW_INFO`. If you add a `kind` or `flow`, add it there too. `.p-map` needs `contain:strict`, otherwise Chrome counts the nodes' unclipped overflow and shrinks the whole printout.
 
 ## Editing the data
 
@@ -42,4 +43,4 @@ Open `lending_technology_map.html` in a browser. It works from `file://`, so no 
 
 ## Verifying changes
 
-Chromium and Playwright are available in cloud sessions. Load the file, click through the filter chips and the Download button, check there are no console/page errors, and take screenshots at 1440×900 and 390×800.
+Chromium and Playwright are available in cloud sessions. Load the file, click through the filter chips and the Download button, check the print output (dispatch `beforeprint`, then `page.pdf({ landscape:true })` at Letter and A4), check there are no console/page errors, and take screenshots at 1440×900 and 390×800.

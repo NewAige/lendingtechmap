@@ -331,7 +331,7 @@ const W = 2240, H = 980;   // COCC sits at (1120, 420)
 const NODES = [
   // ── Core banking (centre) ──
   { id:"cocc",        name:"COCC",             type:"Bank core",          tag:"CORE",    icon:"CO", kind:"core", unit:"core",
-    x:1120, y:420,  desc:"Core banking platform and system of record for the bank. Sends a one-way data dump to Global Wave. An API read connection to VeraPath is planned but not active." },
+    x:1120, y:420,  desc:"Core banking platform and system of record for the bank. Sends a one-way data dump to Global Wave. Has no connection to VeraPath yet, but an OpenAPI connection is available and could be leveraged, since VeraPath accepts API connections." },
   { id:"identifi",    name:"iDentifi",         type:"Cold storage",       tag:"ARCHIVE", icon:"iD", kind:"storage", unit:"core",
     x:1330, y:515,  desc:"Cold storage. Receives data from Encompass and Numerated, receives DecisionLender data through a manual process, receives closing documents from LoanWriter, receives LaserPro documents through manual imaging and LoanWriter application documents through a manual process, and exchanges data with COCC." },
 
@@ -361,7 +361,7 @@ const NODES = [
 
   // ── Indirect lending (below core) ──
   { id:"decisionlender", name:"DecisionLender", type:"Indirect hub",     tag:"HUB",     icon:"DL", kind:"indirect", unit:"indirect",
-    x:1120, y:765,  desc:"Indirect lending hub. Exchanges data with DealerTrack Tech and RouteOne, receives credit data from Experian, Equifax and TransUnion, sends data one-way to iDentifi through a manual process, has an inactive API connection to VeraPath (OpenAPI config ready), and sends data one-way to its LenderLink instance, which passes it on to COCC." },
+    x:1120, y:765,  desc:"Indirect lending hub. Exchanges data with DealerTrack Tech and RouteOne, receives credit data from Experian, Equifax and TransUnion, sends data one-way to iDentifi through a manual process, has no connection to VeraPath yet but an OpenAPI connection is available that could be leveraged (VeraPath accepts API connections), and sends data one-way to its LenderLink instance, which passes it on to COCC." },
   { id:"dealertrack",    name:"DealerTrack Tech", type:"Dealer platform", icon:"DT", kind:"integration", unit:"indirect",
     x:890, y:660,   desc:"Dealer platform. Exchanges data with DecisionLender (bidirectional)." },
   { id:"routeone",       name:"RouteOne",       type:"Dealer platform",   icon:"R1", kind:"integration", unit:"indirect",
@@ -393,15 +393,15 @@ const NODES = [
 
   // ── Construction (own box, below commercial) ──
   { id:"built",       name:"Built",            type:"Construction mgmt",  tag:"SHARED",  icon:"BU", kind:"construction", unit:["construction", "commercial", "residential"],
-    x:380, y:490,   desc:"Construction loan management, shared by commercial and residential lending. Receives data from COCC (one-way). Has an API connection to VeraPath that is not active yet." },
+    x:380, y:490,   desc:"Construction loan management, shared by commercial and residential lending. Receives data from COCC (one-way). Has no connection to VeraPath yet, but an OpenAPI connection is available and could be leveraged, since VeraPath accepts API connections." },
 
   // ── Residential mortgage (right of core) ──
   { id:"elink",       name:"eLink",            type:"Middleware · residential", icon:"↔", kind:"integration", unit:"residential",
     x:1620, y:420,  desc:"Middleware connecting Encompass and COCC." },
   { id:"encompass",   name:"Encompass",        type:"Mortgage hub",       tag:"HUB",     icon:"EN", kind:"mortgage", unit:"residential",
-    x:1850, y:420,  desc:"Residential mortgage loan origination platform and hub for the mortgage integrations. Reaches COCC through eLink. API connection to VeraPath is configured (OpenAPI) but not active." },
+    x:1850, y:420,  desc:"Residential mortgage loan origination platform and hub for the mortgage integrations. Reaches COCC through eLink. Has no connection to VeraPath yet, but an OpenAPI connection is available and could be leveraged, since VeraPath accepts API connections." },
   { id:"verapath",    name:"VeraPath",         type:"Central AI provider", tag:"AI",     icon:"VP", kind:"ai", unit:"ai",
-    x:1750, y:900,  desc:"The bank's central AI provider. DecisionLender and Encompass both have OpenAPI configurations for connecting to VeraPath by API, Built has an API connection, and COCC has a planned API read connection. None of these are active yet." },
+    x:1750, y:900,  desc:"The bank's central AI provider. There is currently no live connection to any lending system. VeraPath accepts API connections, and the linked systems (COCC, DecisionLender, Encompass and Built) all have OpenAPI connections available, so each could be connected to VeraPath and leveraged for AI." },
   { id:"tpo",         name:"TPO Connect",      type:"Wholesale POS",        icon:"↔", kind:"integration", unit:"residential",
     x:2100, y:205,  desc:"Wholesale point of sale. Exchanges data with Encompass, and receives data from LendingPad through a manual process (one-way)." },
   { id:"lendingpad",  name:"LendingPad",       type:"Loan origination",   icon:"✋", kind:"integration", unit:"residential",
@@ -482,10 +482,10 @@ const EDGES = [
   { from:"encompass",      to:"alacriti",    flow:"both", manual:true, note:"Appraisal payments" },
   { from:"encompass",      to:"fannie",      flow:"one" },
   { from:"encompass",      to:"freddie",     flow:"one" },
-  { from:"encompass",      to:"verapath",    flow:"inactive", note:"API · OpenAPI config ready", c1:[-100, 150], c2:[0, -150] },
-  { from:"cocc",           to:"verapath",    flow:"inactive", note:"API read · not active", c1:[0, 220], c2:[-300, -40] },
-  { from:"decisionlender", to:"verapath",    flow:"inactive", note:"API · OpenAPI config ready" },
-  { from:"built",          to:"verapath",    flow:"inactive", note:"API · not active", via:[[750, 490], [750, 960], [1750, 960]] },
+  { from:"encompass",      to:"verapath",    flow:"inactive", note:"No connection yet · OpenAPI available", c1:[-100, 150], c2:[0, -150] },
+  { from:"cocc",           to:"verapath",    flow:"inactive", note:"No connection yet · OpenAPI available", c1:[0, 220], c2:[-300, -40] },
+  { from:"decisionlender", to:"verapath",    flow:"inactive", note:"No connection yet · OpenAPI available" },
+  { from:"built",          to:"verapath",    flow:"inactive", note:"No connection yet · OpenAPI available", via:[[750, 490], [750, 960], [1750, 960]] },
   { from:"enact",          to:"encompass",   flow:"both" },
   { from:"mgic",           to:"encompass",   flow:"both" },
   { from:"oldrepublic",    to:"encompass",   flow:"one",  manual:true }
@@ -863,13 +863,13 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") deselect(); 
 
 /* ---------- business unit filter ---------- */
 // No units selected = show everything. Otherwise show the selected units' systems,
-// plus any system they connect to (faded). The core is always shown in full as
-// context, but only its links into the selected units, not to the other units.
-const CONTEXT_UNIT = "core";
+// plus any system they connect to (faded). The core and AI platform are always shown
+// in full as context, but only their links into the selected units, not to other units.
+const CONTEXT_UNITS = ["core", "ai"];
 const activeUnits = new Set();
 const filtersHost = $("filters");
 const inUnits = units => !activeUnits.size || units.some(u => activeUnits.has(u));
-const inView = units => inUnits(units) || units.includes(CONTEXT_UNIT);
+const inView = units => inUnits(units) || units.some(u => CONTEXT_UNITS.includes(u));
 
 const chips = [{ id:"", label:"All" }, ...UNITS].map(u => {
   const b = document.createElement("button");
@@ -1073,7 +1073,7 @@ function buildPrint() {
   dh.append(dt, el("div", "p-meta", date));
   page2.appendChild(dh);
   const ARROW = { both:"↔", none:"○", inactive:"⋯" };
-  [...UNITS].sort((a, b) => (b.id === CONTEXT_UNIT) - (a.id === CONTEXT_UNIT)).forEach(u => {
+  [...UNITS].sort((a, b) => CONTEXT_UNITS.includes(b.id) - CONTEXT_UNITS.includes(a.id)).forEach(u => {
     const group = vis.filter(n => n.units[0] === u.id).sort((a, b) => (a.kind === "integration") - (b.kind === "integration"));
     if (!group.length) return;
     const sec = el("div", "p-unit"), h = el("h3"), dot = el("i"), table = el("table"), body = el("tbody");

@@ -268,7 +268,7 @@ const NODES = [
   { id:"cocc",        name:"COCC",             type:"Bank core",          tag:"CORE",    icon:"CO", kind:"core", unit:"core",
     x:1120, y:420,  desc:"Core banking platform and system of record for the bank. Sends a one-way data dump to Global Wave. An API read connection to VeraPath is planned but not active." },
   { id:"identifi",    name:"iDentifi",         type:"Cold storage",       tag:"ARCHIVE", icon:"iD", kind:"storage", unit:"core",
-    x:1330, y:515,  desc:"Cold storage. Receives data from Encompass, Numerated and DecisionLender, receives closing documents from LoanWriter, receives LaserPro documents through manual imaging and LoanWriter application documents through a manual process, and exchanges data with COCC." },
+    x:1330, y:515,  desc:"Cold storage. Receives data from Encompass and Numerated, receives DecisionLender data through a manual process, receives closing documents from LoanWriter, receives LaserPro documents through manual imaging and LoanWriter application documents through a manual process, and exchanges data with COCC." },
 
   // ── Consumer lending (lower left) ──
   { id:"loanwriter",  name:"LoanWriter",       type:"Consumer hub",       tag:"HUB",     icon:"LW", kind:"consumer", unit:"consumer",
@@ -296,7 +296,7 @@ const NODES = [
 
   // ── Indirect lending (below core) ──
   { id:"decisionlender", name:"DecisionLender", type:"Indirect hub",     tag:"HUB",     icon:"DL", kind:"indirect", unit:"indirect",
-    x:1120, y:765,  desc:"Indirect lending hub. Exchanges data with DealerTrack Tech and RouteOne, receives credit data from Experian, Equifax and TransUnion, sends data one-way to iDentifi, has an inactive API connection to VeraPath (OpenAPI config ready), and sends data one-way to its LenderLink instance, which passes it on to COCC." },
+    x:1120, y:765,  desc:"Indirect lending hub. Exchanges data with DealerTrack Tech and RouteOne, receives credit data from Experian, Equifax and TransUnion, sends data one-way to iDentifi through a manual process, has an inactive API connection to VeraPath (OpenAPI config ready), and sends data one-way to its LenderLink instance, which passes it on to COCC." },
   { id:"dealertrack",    name:"DealerTrack Tech", type:"Dealer platform", icon:"DT", kind:"integration", unit:"indirect",
     x:890, y:660,   desc:"Dealer platform. Exchanges data with DecisionLender (bidirectional)." },
   { id:"routeone",       name:"RouteOne",       type:"Dealer platform",   icon:"R1", kind:"integration", unit:"indirect",
@@ -377,7 +377,7 @@ const EDGES = [
   { from:"numerated",      to:"numpos",      flow:"both" },
   { from:"numerated",      to:"cocc",        flow:"one",  manual:true },
   { from:"numerated",      to:"identifi",    flow:"one" },
-  { from:"decisionlender", to:"identifi",    flow:"one" },
+  { from:"decisionlender", to:"identifi",    flow:"one",  manual:true },
   { from:"lexisnexis",     to:"numerated",   flow:"one" },
   { from:"experiansb",     to:"numerated",   flow:"one" },
   { from:"dnb",            to:"numerated",   flow:"one" },
@@ -798,10 +798,13 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") deselect(); 
 
 /* ---------- business unit filter ---------- */
 // No units selected = show everything. Otherwise show the selected units' systems,
-// plus any system they connect to (faded) so links into the core stay visible.
+// plus any system they connect to (faded). The core is always shown in full as
+// context, but only its links into the selected units, not to the other units.
+const CONTEXT_UNIT = "core";
 const activeUnits = new Set();
 const filtersHost = $("filters");
 const inUnits = units => !activeUnits.size || units.some(u => activeUnits.has(u));
+const inView = units => inUnits(units) || units.includes(CONTEXT_UNIT);
 
 const chips = [{ id:"", label:"All" }, ...UNITS].map(u => {
   const b = document.createElement("button");
@@ -820,13 +823,15 @@ const chips = [{ id:"", label:"All" }, ...UNITS].map(u => {
 });
 
 function applyFilter(refit) {
-  const shown = new Set(NODES.filter(n => inUnits(n.units)).map(n => n.id));
+  const sel = new Set(NODES.filter(n => inUnits(n.units)).map(n => n.id));
+  const shown = new Set(NODES.filter(n => inView(n.units)).map(n => n.id));
   const ghost = new Set();
   let edgeCount = 0;
   EDGES.forEach(e => {
-    const a = shown.has(e.from), b = shown.has(e.to), on = a || b;
-    if (a && !b) ghost.add(e.to);
-    if (b && !a) ghost.add(e.from);
+    const a = sel.has(e.from), b = sel.has(e.to);
+    const on = a || b || (shown.has(e.from) && shown.has(e.to));
+    if (a && !shown.has(e.to)) ghost.add(e.to);
+    if (b && !shown.has(e.from)) ghost.add(e.from);
     e.g.classList.toggle("filtered-out", !on);
     if (on) edgeCount++;
   });
@@ -834,7 +839,7 @@ function applyFilter(refit) {
     n.el.classList.toggle("ghost", ghost.has(n.id));
     n.el.classList.toggle("filtered-out", !shown.has(n.id) && !ghost.has(n.id));
   });
-  [...LANES, ...CAPTIONS].forEach(l => l.g.classList.toggle("filtered-out", !inUnits(l.units)));
+  [...LANES, ...CAPTIONS].forEach(l => l.g.classList.toggle("filtered-out", !inView(l.units)));
   chips.forEach(c => c.el.setAttribute("aria-pressed", c.unit ? activeUnits.has(c.unit) : !activeUnits.size));
 
   $("counts").textContent = activeUnits.size
@@ -854,6 +859,8 @@ function fitToVisible() {
   if (!vis.length) return;
   let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
   vis.forEach(n => { x0 = Math.min(x0, n.x - 110); x1 = Math.max(x1, n.x + 110); y0 = Math.min(y0, n.y - 50); y1 = Math.max(y1, n.y + 50); });
+  // Keep the top of each visible lane (its label) in view too
+  LANES.filter(l => !l.g.classList.contains("filtered-out")).forEach(l => { y0 = Math.min(y0, l.y); });
   const a = safeArea();
   zoom = clamp(Math.min((a.w - 40) / (x1 - x0), (a.h - 20) / (y1 - y0)) / fit, 0.5, 2.6);
   const s = scale();

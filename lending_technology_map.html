@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lending Technology Map</title>
+<title>Bank Technology Map</title>
 <style>
 :root{
   --bg:#07101d;--text:#edf6ff;--muted:#91a7bc;--line:#ffffff14;
@@ -16,9 +16,15 @@
   --ind-a:#e4f57a;--ind-b:#9ccc4e;
   --sb-a:#7af0b4;--sb-b:#2fb87a;
   --ai-a:#8ff6ff;--ai-b:#c08bff;
+  --lend-a:#8fb4ff;--lend-b:#ae91ff;
+  --dep-a:#7af0b4;--dep-b:#38c8e0;
+  --acct-a:#ffe07a;--acct-b:#f2a54e;
+  --serv-a:#ffb3a7;--serv-b:#f07aa8;
+  --coll-a:#ff9f8a;--coll-b:#e86a5a;
   --accent:#69f1e0;
 }
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
 body{background:radial-gradient(ellipse at 50% 50%,#122541 0%,#091524 48%,#050b14 100%)}
 #stars{position:fixed;inset:0;pointer-events:none;opacity:.7}
@@ -26,7 +32,8 @@ body{background:radial-gradient(ellipse at 50% 50%,#122541 0%,#091524 48%,#050b1
 
 /* Top bar */
 .topbar{height:72px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 32px;border-bottom:1px solid var(--line);background:#07101dcc;backdrop-filter:blur(16px);z-index:10}
-.brand{display:flex;align-items:center;gap:13px}
+.brand{display:flex;align-items:center;gap:13px;color:inherit;text-decoration:none;border-radius:12px;outline:none}
+.brand:focus-visible .logo{box-shadow:0 0 0 2px #65e8db,0 0 26px #5cebd944}
 .logo{width:38px;height:38px;border-radius:12px;background:linear-gradient(135deg,#68f1e0,#69a9ff);display:grid;place-items:center;color:#06121b;font-weight:900;box-shadow:0 0 26px #5cebd944;font-size:19px}
 .brand-title{font-weight:750;letter-spacing:.02em}
 .brand-sub{color:var(--muted);font-size:11px;margin-top:3px;letter-spacing:.12em;text-transform:uppercase}
@@ -36,16 +43,37 @@ body{background:radial-gradient(ellipse at 50% 50%,#122541 0%,#091524 48%,#050b1
 .btn{white-space:nowrap;background:#ffffff08;border:1px solid #ffffff1c;color:#c5d7e9;padding:9px 12px;border-radius:9px;font-size:12px;cursor:pointer;transition:border-color .2s,color .2s,background .2s;font-family:inherit}
 .btn:hover,.btn:focus-visible{border-color:#65e8db;color:#fff;background:#65e8db13;outline:none}
 
+/* Search */
+.search{position:relative}
+.search-toggle{display:none}
+.search-box{position:relative}
+.search-box>svg{position:absolute;left:11px;top:50%;width:13px;height:13px;margin-top:-6.5px;fill:none;stroke:#7f97ae;stroke-width:1.8;stroke-linecap:round;pointer-events:none}
+.search-input{width:220px;background:#ffffff08;border:1px solid #ffffff1c;color:#e2edf7;padding:9px 12px 9px 31px;border-radius:9px;font-family:inherit;font-size:12px;outline:none;transition:border-color .2s,background .2s;-webkit-appearance:none;appearance:none}
+.search-input::placeholder{color:#7790a7}
+.search-input:focus{border-color:#65e8db;background:#65e8db13}
+.results{position:absolute;top:calc(100% + 6px);right:0;width:330px;max-height:min(380px,70vh);overflow:auto;margin:0;padding:6px;list-style:none;border-radius:12px;background:#0a1726f7;border:1px solid #ffffff1b;box-shadow:0 20px 60px #0009;backdrop-filter:blur(20px);z-index:20}
+.result{display:flex;align-items:center;gap:10px;padding:8px 9px;border-radius:8px;cursor:pointer}
+.result[aria-selected="true"],.result:hover{background:#65e8db1a}
+.result b{display:block;font-size:12.5px;font-weight:650;color:#edf6ff}
+.result small{display:block;font-size:10.5px;color:#8aa1b6;margin-top:2px}
+.no-results{padding:10px;font-size:11.5px;color:#8aa1b6;list-style:none}
+
 /* Stage */
 main{flex:1;position:relative;min-height:0}
 .heading{position:absolute;z-index:3;top:22px;left:32px;pointer-events:none}
 .eyebrow{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#73dfdc;font-weight:700}
+.crumbs{display:flex;align-items:center;gap:8px}
+.crumbs a{pointer-events:auto;color:#a9bdd0;text-decoration:none;padding:6px 0;margin:-6px 0;border-bottom:1px solid transparent;transition:color .2s,border-color .2s;outline:none}
+.crumbs a:hover,.crumbs a:focus-visible{color:#fff;border-bottom-color:#65e8db}
+.crumbs .sep{color:#4f6377}
 .heading h1{font-size:22px;margin:7px 0 4px;letter-spacing:-.03em}
 .heading p{margin:0;color:var(--muted);font-size:12px}
 .hint{position:absolute;right:30px;top:24px;color:#7790a7;font-size:10px;letter-spacing:.04em;z-index:3;pointer-events:none}
 
 .canvas{position:absolute;inset:0;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab}
 .canvas.panning{cursor:grabbing}
+.canvas.enter .world{animation:viewin .45s ease}
+@keyframes viewin{from{opacity:0}}
 .grid{position:absolute;inset:-20%;pointer-events:none;background-image:linear-gradient(#83c9ff0b 1px,transparent 1px),linear-gradient(90deg,#83c9ff0b 1px,transparent 1px);background-size:48px 48px;transform:perspective(1100px) rotateX(54deg) translateY(60px);-webkit-mask-image:radial-gradient(ellipse,#000 15%,transparent 67%);mask-image:radial-gradient(ellipse,#000 15%,transparent 67%);animation:gridmove 36s linear infinite}
 @keyframes gridmove{to{background-position:48px 48px}}
 
@@ -67,9 +95,10 @@ svg.layer{position:absolute;left:0;top:0;overflow:visible;pointer-events:none}
 .link.glow{stroke-width:7;opacity:.12}
 .is-manual .link.main{stroke-dasharray:9 6;stroke-width:2.3}
 .f-none .link.main{stroke-dasharray:2 7;stroke-linecap:round;stroke-width:2;opacity:.75}
-.f-none .link.glow,.f-inactive .link.glow{display:none}
+.f-none .link.glow,.f-inactive .link.glow,.f-unmapped .link.glow{display:none}
 .f-inactive .link.main{stroke-dasharray:6 7;stroke-width:1.8;opacity:.6}
-.edge.f-inactive.active .link.main{opacity:1}
+.f-unmapped .link.main{stroke-dasharray:3 8;stroke-linecap:round;stroke-width:1.8;opacity:.5}
+.edge.f-inactive.active .link.main,.edge.f-unmapped.active .link.main{opacity:1}
 .edge.dim .link{opacity:.12}
 .edge.dim .particle{opacity:.15}
 .edge.active .link:not(.back):not(.glow){opacity:1}
@@ -82,6 +111,8 @@ svg.layer{position:absolute;left:0;top:0;overflow:visible;pointer-events:none}
 /* Nodes */
 .node{position:absolute;left:0;top:0;transform:translate(-50%,-50%);cursor:pointer;z-index:2;outline:none;transition:opacity .25s}
 .node.dragging{cursor:grabbing;z-index:5}
+.node.portal{opacity:.55}
+.node.portal:hover,.node.portal:focus-visible{opacity:.9}
 .node.dim{opacity:.42}
 .node-core{position:relative;min-width:160px;height:72px;border:1px solid #ffffff20;border-radius:15px;background:linear-gradient(145deg,#172940f2,#0b1829f2);box-shadow:0 15px 40px #0008,inset 0 1px #ffffff12;display:flex;align-items:center;gap:12px;padding:12px 14px;transition:transform .2s ease,border-color .2s,box-shadow .2s}
 .node:hover .node-core,.node:focus-visible .node-core{transform:scale(1.06)}
@@ -118,10 +149,27 @@ svg.layer{position:absolute;left:0;top:0;overflow:visible;pointer-events:none}
 .k-core .tag{color:#80e6d8;border-color:#55d7c833;background:#53dfcd0d}
 .k-mortgage .tag{color:#c3b0ff;border-color:#ae91ff44;background:#ae91ff10}
 .k-commercial .tag{color:#ffd38a;border-color:#ffc46b44;background:#ffc46b10}
+.portal .node-core{border-style:dashed;border-color:#ffffff33}
+.portal .tag{color:#a9bdd0;border-color:#ffffff30;background:#ffffff08}
 .pulse{position:absolute;inset:-7px;border:1px solid #65e9d044;border-radius:20px;animation:pulse 2.8s ease-out infinite;pointer-events:none}
 .k-mortgage .pulse{border-color:#ae91ff44}
 .k-commercial .pulse{border-color:#ffc46b44}
 @keyframes pulse{0%{transform:scale(.98);opacity:.7}100%{transform:scale(1.14);opacity:0}}
+
+/* Overview: one tile per area around the core */
+.k-area .node-core{display:grid;grid-template-columns:42px 1fr;column-gap:14px;align-items:start;width:330px;height:auto;padding:16px 18px;border-radius:18px}
+.k-area .node-icon{grid-row:1/4;width:42px;height:42px;border-radius:12px;font-size:13px;background:linear-gradient(140deg,var(--aa),var(--ab));color:#08151e}
+.k-area .node-name{font-size:17px;white-space:normal}
+.tile-desc{font-size:12px;line-height:1.45;color:#a4b7c9;margin-top:5px}
+.tile-meta{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:10px;font-size:10.5px;color:#91a9bf;letter-spacing:.04em}
+.tile-count,.tile-open{white-space:nowrap}
+.tile-open{color:var(--accent);font-weight:650}
+.pill{font-size:9px;padding:3px 7px;border-radius:20px;border:1px solid #ffffff24;color:#91a7bc;letter-spacing:.1em;text-transform:uppercase}
+.node.k-area:hover .node-core,.node.k-area:focus-visible .node-core{transform:scale(1.03);border-color:#65e8db88}
+.k-area.empty .node-core{border-style:dashed;border-color:#ffffff26;background:linear-gradient(145deg,#122032f5,#0b1829f5);box-shadow:none}
+.k-area.empty .node-icon{background:#101c2a;color:var(--aa);border:1px dashed #ffffff2a}
+.k-area.empty .node-name{color:#b9c8d6}
+.k-area.empty .tile-desc{color:#7f93a8}
 
 /* Detail panel */
 .panel{position:absolute;right:24px;top:52px;transform:translateX(20px);width:290px;max-height:calc(100% - 120px);overflow:auto;border-radius:16px;padding:19px;background:#0a1726f2;border:1px solid #ffffff1b;box-shadow:0 20px 70px #0008;backdrop-filter:blur(20px);opacity:0;visibility:hidden;transition:opacity .3s,transform .3s,visibility 0s linear .3s;z-index:8}
@@ -131,6 +179,7 @@ svg.layer{position:absolute;left:0;top:0;overflow:visible;pointer-events:none}
 .panel-kicker{font-size:9px;color:#70e8d9;letter-spacing:.16em;text-transform:uppercase}
 .panel h2{margin:10px 0 5px;font-size:19px}
 .panel p{font-size:12px;line-height:1.6;color:#a4b7c9;margin:0 0 6px}
+.panel .btn{margin:6px 0 2px}
 .detail{border-top:1px solid #ffffff12;padding:12px 0 0;margin-top:12px}
 .detail-label{font-size:9px;color:#758da4;letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px}
 .conn{display:flex;align-items:flex-start;gap:9px;padding:7px 0;font-size:12px;color:#e2edf7;border-bottom:1px solid #ffffff08;cursor:pointer}
@@ -161,25 +210,42 @@ svg.layer{position:absolute;left:0;top:0;overflow:visible;pointer-events:none}
 .lg.manual{border-top-style:dashed}
 .lg.none{border-top-style:dotted;box-shadow:none}
 .lg.inactive{border-top-style:dashed;box-shadow:none;opacity:.7}
+.lg.unmapped{border-top-style:dotted;box-shadow:none;opacity:.8}
 .legend-sep{width:1px;height:12px;background:#ffffff22}
 .swatch{width:10px;height:10px;border-radius:3px}
+.swatch.portal{border:1px dashed #ffffff66}
 .controls{position:absolute;bottom:18px;right:24px;display:flex;gap:7px;z-index:3}
 footer{height:31px;flex-shrink:0;border-top:1px solid #ffffff0d;padding:0 32px;display:flex;align-items:center;justify-content:space-between;color:#687f95;font-size:9px;letter-spacing:.08em;text-transform:uppercase}
 
+@media (max-width:1100px){
+  .live{display:none}
+}
 @media (max-width:750px){
-  .topbar{padding:0 16px;height:64px}.live{display:none}
+  .topbar{padding:0 16px;height:64px}.live{display:none}.top-right{gap:8px}
   .heading{left:16px;top:14px}.heading h1{font-size:18px}.heading p{display:none}
   .hint{display:none}
   .btn-text,.filter-label{display:none}
   .filters{left:16px;right:16px;top:62px;flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
   .filters::-webkit-scrollbar{display:none}
   .brand-sub{display:none}
+  .search-toggle{display:inline-block}
+  .search-box{display:none;position:fixed;left:12px;right:12px;top:72px;z-index:20}
+  .search.open .search-box{display:block}
+  .search-input,.search-input:focus{width:100%;font-size:16px;padding:11px 12px 11px 33px;background:#0a1726;box-shadow:0 12px 40px #000a}
+  .results{left:0;right:0;width:auto;max-height:60vh}
   .panel{right:12px;left:12px;width:auto;top:auto;bottom:60px;max-height:55%;transform:translateY(14px)}
   .panel.open{transform:translateY(0)}
   .legend{left:16px;right:110px;bottom:16px;gap:6px 10px}.legend .opt,.legend-sep{display:none}
   footer span:first-child{display:none}
   .controls{right:12px;bottom:10px}
   footer{padding:0 16px}
+  .k-area .node-core{width:172px;grid-template-columns:30px 1fr;column-gap:9px;align-items:center;padding:12px;border-radius:15px}
+  .k-area .node-icon{grid-row:auto;width:30px;height:30px;border-radius:9px;font-size:10.5px}
+  .k-area .node-name{font-size:15px;line-height:1.15}
+  .tile-desc,.tile-meta{grid-column:1/-1}
+  .tile-desc{font-size:11.5px;line-height:1.4;margin-top:8px}
+  .tile-meta{margin-top:8px;font-size:10px}
+  .tile-conn{display:none}
 }
 /* Print sheet: built on demand from the live map, shown only when printing */
 .print-sheet{display:none}
@@ -207,7 +273,7 @@ footer{height:31px;flex-shrink:0;border-top:1px solid #ffffff0d;padding:0 32px;d
   .p-map .caption{fill:#7a8b9c;font-size:11px}
   .p-map .link{opacity:1;stroke-width:2.4}
   .p-map .is-manual .link.main{stroke-width:2.6}
-  .p-map .f-inactive .link.main{opacity:.9}
+  .p-map .f-inactive .link.main,.p-map .f-unmapped .link.main{opacity:.9}
   .p-map .chev{stroke-width:2.4}
   .p-map .node-core{background:#fff;border:1.5px solid var(--kc,#c9d3df);box-shadow:0 1px 3px #0d1b2a1f;min-width:166px}
   .p-map .node-name{font-size:15px;color:var(--ink)}
@@ -216,8 +282,14 @@ footer{height:31px;flex-shrink:0;border-top:1px solid #ffffff0d;padding:0 32px;d
   .k-core{--kc:#4fc9c0;--kt:#0c7d75}.k-mortgage{--kc:#8f86f5;--kt:#4b48c4}.k-commercial{--kc:#f0a85a;--kt:#a85a12}
   .k-consumer{--kc:#ef8bb3;--kt:#b2366c}.k-storage{--kc:#97aac0;--kt:#4b5f76}.k-construction{--kc:#c9a172;--kt:#7f5626}
   .k-indirect{--kc:#a9cc52;--kt:#55731a}.k-smallbiz{--kc:#4fcf92;--kt:#16804f}.k-ai{--kc:#a796f5;--kt:#6a43c9}
+  .k-area{--kc:#aebbcb;--kt:#3b4b5c}
   .print-sheet .k-integration .node-icon{background:#e9f7f5;color:#0f7f74;border:1px solid #9ad8d0}
-  .p-map .unlinked .node-core{border-style:dashed}
+  .p-map .unlinked .node-core,.p-map .portal .node-core{border-style:dashed}
+  .p-map .tile-desc,.p-map .tile-meta{color:var(--soft)}
+  .p-map .k-area.empty .node-core{border-style:dashed;background:#f6f8fb}
+  .p-map .k-area.empty .node-icon{background:#eef2f6;color:#5a6b7d;border-color:#c3cfdc}
+  .p-map .k-area.empty .node-name{color:#3b4b5c}
+  .p-map .pill{color:var(--soft);border-color:#c3cfdc}
   .p-legend{display:grid;grid-template-columns:1.15fr 1.55fr 1fr;gap:18px;padding-top:9px;border-top:1px solid var(--rule);break-inside:avoid}
   .p-legend h3,.p-dir h2{font-size:7.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--soft);margin:0 0 6px;font-weight:700}
   .p-row{display:flex;align-items:flex-start;gap:8px;margin-bottom:5px;line-height:1.35}
@@ -246,22 +318,33 @@ footer{height:31px;flex-shrink:0;border-top:1px solid #ffffff0d;padding:0 32px;d
   .p-conn em{font-style:normal;font-weight:700;margin-right:4px}
 }
 @media (prefers-reduced-motion:reduce){
-  .grid,.orbit.two,.pulse{animation:none}
+  .grid,.orbit.two,.pulse,.canvas.enter .world{animation:none}
   .pulse{display:none}
 }
+.result .node-icon{width:28px;height:28px;border-radius:8px;font-size:10px}
 </style>
 </head>
 <body>
 <canvas id="stars"></canvas>
 <div class="app">
   <header class="topbar">
-    <div class="brand"><div class="logo">✳</div><div><div class="brand-title">Integration Atlas</div><div class="brand-sub">Lending technology map</div></div></div>
-    <div class="top-right"><div class="live"><i></i>Network view</div><button class="btn" id="print" aria-label="Print map" title="Print a clean, light version of the map with a legend and systems directory, or save it as a PDF"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6V2h8v4M4 12H2.5V6.5h11V12H12M4 9.5h8V14H4z"/></svg><span class="btn-text"> &nbsp;Print</span></button><button class="btn" id="download" aria-label="Download map" title="Download this map as a single HTML file you can open offline or share">⤓<span class="btn-text"> &nbsp;Download</span></button><button class="btn" id="reset" aria-label="Reset view" title="Reset filters, zoom, pan and node positions">⌂<span class="btn-text"> &nbsp;Reset view</span></button></div>
+    <a class="brand" href="#overview" title="Back to the bank-wide overview"><div class="logo">✳</div><div><div class="brand-title">Integration Atlas</div><div class="brand-sub">Bank technology map</div></div></a>
+    <div class="top-right">
+      <div class="search" id="search">
+        <button class="btn search-toggle" id="searchToggle" type="button" aria-label="Search systems" aria-expanded="false" aria-controls="searchBox"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5 14 14" stroke-linecap="round"/></svg></button>
+        <div class="search-box" id="searchBox">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5 14 14"/></svg>
+          <input class="search-input" id="q" type="search" placeholder="Search systems  ( / )" autocomplete="off" spellcheck="false" role="combobox" aria-expanded="false" aria-controls="results" aria-autocomplete="list" aria-label="Search systems in every area">
+          <ul class="results" id="results" role="listbox" aria-label="Matching systems" hidden></ul>
+        </div>
+      </div>
+      <div class="live"><i></i>Network view</div><button class="btn" id="print" aria-label="Print map" title="Print a clean, light version of this view with a legend and systems directory, or save it as a PDF"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6V2h8v4M4 12H2.5V6.5h11V12H12M4 9.5h8V14H4z"/></svg><span class="btn-text"> &nbsp;Print</span></button><button class="btn" id="download" aria-label="Download map" title="Download this map as a single HTML file you can open offline or share">⤓<span class="btn-text"> &nbsp;Download</span></button><button class="btn" id="reset" aria-label="Reset view" title="Reset filters, zoom, pan and node positions">⌂<span class="btn-text"> &nbsp;Reset view</span></button>
+    </div>
   </header>
   <main>
-    <div class="heading"><div class="eyebrow">Systems landscape / 01</div><h1>Lending technology map</h1><p>Consumer, indirect, small business, commercial and residential lending around the core and their integrations.</p></div>
-    <div class="filters" id="filters" role="group" aria-label="Filter by business unit"><span class="filter-label">Business unit</span></div>
-    <div class="hint">CLICK A NODE TO EXPLORE &nbsp;·&nbsp; DRAG TO PAN OR MOVE NODES &nbsp;·&nbsp; SCROLL TO ZOOM</div>
+    <div class="heading"><nav class="eyebrow crumbs" id="crumbs" aria-label="Breadcrumb"></nav><h1 id="title"></h1><p id="blurb"></p></div>
+    <div class="filters" id="filters" role="group" aria-label="Filter by business unit"></div>
+    <div class="hint" id="hint"></div>
     <div class="canvas" id="canvas">
       <div class="grid"></div>
       <div class="world" id="world">
@@ -281,25 +364,12 @@ footer{height:31px;flex-shrink:0;border-top:1px solid #ffffff0d;padding:0 32px;d
       <div class="panel-kicker" id="pKicker">Platform details</div>
       <h2 id="pTitle"></h2>
       <p id="pDesc"></p>
-      <div class="detail"><div class="detail-label">Connected systems</div><div id="pConnections"></div></div>
+      <p id="pNote" hidden></p>
+      <button class="btn" id="pHome" type="button" hidden></button>
+      <div class="detail" id="pDetail"><div class="detail-label">Connected systems</div><div id="pConnections"></div></div>
     </aside>
 
-    <div class="legend" id="legend">
-      <div class="legend-item"><i class="lg" style="--ec:#5ee9d6"></i> Bidirectional</div>
-      <div class="legend-item"><i class="lg" style="--ec:#8ea6ff"></i> One-way</div>
-      <div class="legend-item"><i class="lg manual" style="--ec:#ff8fc8"></i> Manual process</div>
-      <div class="legend-item"><i class="lg inactive" style="--ec:#8193a8"></i> Not active (API)</div>
-      <span class="legend-sep"></span>
-      <div class="legend-item"><i class="swatch" style="background:linear-gradient(140deg,var(--core-a),var(--core-b))"></i> Core</div>
-      <div class="legend-item"><i class="swatch" style="background:linear-gradient(140deg,var(--mort-a),var(--mort-b))"></i> Mortgage</div>
-      <div class="legend-item"><i class="swatch" style="background:linear-gradient(140deg,var(--comm-a),var(--comm-b))"></i> Commercial</div>
-      <div class="legend-item"><i class="swatch" style="background:linear-gradient(140deg,var(--cons-hub-a),var(--cons-hub-b))"></i> Consumer</div>
-      <div class="legend-item"><i class="swatch" style="background:linear-gradient(140deg,var(--stor-a),var(--stor-b))"></i> Cold storage</div>
-      <div class="legend-item"><i class="swatch" style="background:linear-gradient(140deg,var(--cons-a),var(--cons-b))"></i> Construction</div>
-      <div class="legend-item"><i class="swatch" style="background:linear-gradient(140deg,var(--ind-a),var(--ind-b))"></i> Indirect</div>
-      <div class="legend-item"><i class="swatch" style="background:linear-gradient(140deg,var(--sb-a),var(--sb-b))"></i> Small business</div>
-      <div class="legend-item"><i class="swatch" style="background:linear-gradient(140deg,var(--ai-a),var(--ai-b))"></i> AI</div>
-    </div>
+    <div class="legend" id="legend"></div>
     <div class="controls">
       <button class="btn" id="zoomOut" aria-label="Zoom out">−</button>
       <button class="btn" id="zoomIn" aria-label="Zoom in">+</button>
@@ -318,17 +388,62 @@ footer{height:31px;flex-shrink:0;border-top:1px solid #ffffff0d;padding:0 32px;d
 const PAGE_SOURCE = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
 
 /* ============================================================
-   DATA — edit this section to add systems and connections.
-   x / y are positions in the W × H world.
-   kind: core | mortgage | commercial | integration
-   unit: business unit(s) used by the filter bar, see UNITS below
+   DATA — edit this section to add areas, systems and connections.
+
+   AREAS lists the areas of the bank. Each one is a tile on the
+   overview; an area with a map in MAPS (below) opens it. Areas
+   without a map show as "Not mapped yet".
+
+   Each map holds its own nodes, edges, lanes, captions and units.
+   Node ids must be unique across ALL maps (search and portals
+   find a system by its id).
+
+   Portals (a system from another area shown in this map):
+     { ref:"<system id>", x, y, unit?, desc? }
+   It keeps its name, icon and colour and can be used in this
+   map's edges by that id. It is drawn dimmed with its home area
+   as a tag, and clicking it opens its home area and selects it.
+   A reference to a core system (kind "core", e.g. COCC) is drawn
+   at full strength instead and selects in place, because every
+   area's systems hang off the core; its details panel links back
+   to its home map. unit (optional) is this map's unit for the
+   filter; desc (optional) replaces the description in this map.
    ============================================================ */
+
+// Overview tiles, in display order (clockwise from the top, around the core).
+// color: a colour token prefix from :root (e.g. "lend" → --lend-a / --lend-b).
+const AREAS = [
+  { id:"lending",     label:"Lending",        icon:"LE", color:"lend", desc:"Consumer, indirect, small business, commercial and residential lending." },
+  { id:"deposits",    label:"Deposits",       icon:"DE", color:"dep",  desc:"Deposit sales and deposit operations." },
+  { id:"accounting",  label:"Accounting",     icon:"AC", color:"acct", desc:"The bank's accounting and finance systems." },
+  { id:"servicing",   label:"Loan servicing", icon:"LS", color:"serv", desc:"Servicing of loans after they close." },
+  { id:"collections", label:"Collections",    icon:"CL", color:"coll", desc:"Collection of past-due loans." }
+];
+
+// The overview. core is the system shown at its centre (an id from one of the maps).
+const OVERVIEW = {
+  title:"Bank technology map",
+  blurb:"The bank's areas around the core. Open an area to see its systems and integrations.",
+  core:"cocc",
+  coreDesc:"Core banking platform and system of record for the bank. Lines show which areas' systems exchange data with it; open an area to see each integration."
+};
+
+/* ---------- Lending ---------- */
+// x / y are positions in the W × H world. kind sets the colour and style:
+// core | mortgage | commercial | consumer | indirect | smallbiz | storage | construction | ai | integration
+// unit: business unit(s) used by the filter bar, see LENDING.units below
 // Three 700-wide columns: commercial & consumer (x 30–730), small business,
 // core & indirect (770–1470), residential & AI (1510–2210). Rows line up across
 // columns; nodes in a row are 230 apart, rows ~110 apart.
-const W = 2240, H = 980;   // COCC sits at (1120, 420)
+const LENDING = {
+  title:"Lending technology map",
+  blurb:"Consumer, indirect, small business, commercial and residential lending around the core and their integrations.",
+  W:2240, H:980,                 // COCC sits at (1120, 420)
+  center:"cocc",                 // the halo and orbits circle this system
+  contextUnits:["core", "ai"]    // always shown in full when filtering, as context
+};
 
-const NODES = [
+LENDING.nodes = [
   // ── Core banking (centre) ──
   { id:"cocc",        name:"COCC",             type:"Bank core",          tag:"CORE",    icon:"CO", kind:"core", unit:"core",
     x:1120, y:420,  desc:"Core banking platform and system of record for the bank. Sends a one-way data dump to Global Wave. Has no connection to VeraPath yet, but an OpenAPI connection is available and could be leveraged, since VeraPath accepts API connections." },
@@ -431,7 +546,7 @@ const NODES = [
 // flow: "both" (bidirectional) | "one" (from → to) | "none" (no integration)
 // manual: true marks a manual process (pink, dashed). bend: optional curve tightness (default .45)
 // c1 / c2: control-point offsets for a hand-tuned curve. via: [[x, y], ...] world waypoints for a routed line
-const EDGES = [
+LENDING.edges = [
   { from:"transunion",     to:"loanwriter",  flow:"one" },
   { from:"loanwriter",     to:"lwpos",       flow:"both", note:"Built into LoanWriter" },
   { from:"loanwriter",     to:"cocc",        flow:"both", note:"Direct connection", c1:[250, 0], c2:[-500, 0] },
@@ -491,17 +606,8 @@ const EDGES = [
   { from:"oldrepublic",    to:"encompass",   flow:"one",  manual:true }
 ];
 
-const FLOW = {
-  both:   { label:"Bidirectional",  color:"#5ee9d6" },
-  one:    { label:"One-way",        color:"#8ea6ff" },
-  none:   { label:"No integration", color:"#6b7c8f" },
-  inactive: { label:"Not active",   color:"#8193a8" }
-};
-const MANUAL_COLOR = "#ff8fc8";
-const edgeColor = e => e.manual ? MANUAL_COLOR : FLOW[e.flow].color;
-
 // Lanes are the shaded boxes around each business unit
-const LANES = [
+LENDING.lanes = [
   { label:"Construction",                  x:30,   y:425, w:700, h:130, units:["construction"] },
   { label:"Commercial lending",            x:30,   y:40,  w:700, h:345, units:["commercial"] },
   { label:"Consumer lending",              x:30,   y:600, w:700, h:340, units:["consumer"] },
@@ -512,7 +618,7 @@ const LANES = [
   { label:"AI platform",                   x:1510, y:855, w:700, h:90,  units:["ai"] }
 ];
 
-const CAPTIONS = [
+LENDING.captions = [
   { text:"Investors",                  x:1755, y:66,  units:["residential"] },
   { text:"Partner integrations",       x:2100, y:66,  units:["residential"] },
   { text:"Mortgage insurance & title", x:1905, y:797, units:["residential"] },
@@ -520,7 +626,7 @@ const CAPTIONS = [
 ];
 
 // Business units for the filter bar. A node can belong to several (e.g. Built).
-const UNITS = [
+LENDING.units = [
   { id:"consumer",     label:"Consumer",       color:"var(--cons-hub-a)" },
   { id:"indirect",     label:"Indirect",       color:"var(--ind-a)" },
   { id:"smallbiz",     label:"Small business", color:"var(--sb-a)" },
@@ -531,72 +637,256 @@ const UNITS = [
   { id:"ai",           label:"AI",             color:"var(--ai-a)" }
 ];
 
+/* ---------- Deposits, Accounting, Loan servicing, Collections ---------- */
+// Not mapped yet. To map an area, copy the shape of LENDING above
+// (title, blurb, W, H, center, contextUnits, nodes, edges, lanes, captions, units)
+// and add it to MAPS below under the area's id.
+
+// Every mapped area: MAPS.<area id> = its map
+const MAPS = { lending:LENDING };
+
+// flow: "both" (bidirectional) | "one" (from → to) | "none" (no integration) | "inactive" (available, not in use)
+// "unmapped" is used only by the overview, for areas that are not mapped yet.
+const FLOW = {
+  both:   { label:"Bidirectional",  color:"#5ee9d6" },
+  one:    { label:"One-way",        color:"#8ea6ff" },
+  none:   { label:"No integration", color:"#6b7c8f" },
+  inactive: { label:"Not active",   color:"#8193a8" },
+  unmapped: { label:"Not mapped yet", color:"#6f849b" }
+};
+const MANUAL_COLOR = "#ff8fc8";
+const edgeColor = e => e.manual ? MANUAL_COLOR : FLOW[e.flow].color;
+
 const KIND_LABEL = { ai:"AI provider", smallbiz:"Small business hub", indirect:"Indirect hub", core:"Core platform", mortgage:"Mortgage hub", commercial:"Commercial hub", consumer:"Consumer hub", integration:"Integration", storage:"Cold storage", construction:"Construction" };
-const ORBIT_CENTER = "cocc";
+// Legend swatch for each coloured kind, in legend order: [colour token prefix from :root, label]
+const KIND_SWATCH = { core:["core", "Core"], mortgage:["mort", "Mortgage"], commercial:["comm", "Commercial"], consumer:["cons-hub", "Consumer"], storage:["stor", "Cold storage"], construction:["cons", "Construction"], indirect:["ind", "Indirect"], smallbiz:["sb", "Small business"], ai:["ai", "AI"] };
 
 /* ============================================================ */
 
 const $ = id => document.getElementById(id);
 const SVGNS = "http://www.w3.org/2000/svg";
 const canvas = $("canvas"), world = $("world"), panel = $("panel");
-const edgesG = $("edges"), nodesHost = $("nodes");
+const edgesG = $("edges"), nodesHost = $("nodes"), laneLayer = $("laneLayer"), filtersHost = $("filters"), legendHost = $("legend");
 const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
-NODES.forEach(n => { n.units = [].concat(n.unit); });
-const byId = Object.fromEntries(NODES.map(n => [n.id, n]));
-const DEFAULT_POS = Object.fromEntries(NODES.map(n => [n.id, { x:n.x, y:n.y }]));
+const compactQuery = matchMedia("(max-width:750px)");
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 const svgEl = (tag, attrs) => { const e = document.createElementNS(SVGNS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); return e; };
+const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+const gradient = token => `linear-gradient(140deg,var(--${token}-a),var(--${token}-b))`;
+const HUB_KINDS = ["core", "mortgage", "commercial", "consumer", "indirect", "smallbiz", "ai"];
 
-world.style.width = W + "px";
-world.style.height = H + "px";
-["laneLayer", "linkLayer"].forEach(id => { const s = $(id); s.setAttribute("width", W); s.setAttribute("height", H); s.setAttribute("viewBox", `0 0 ${W} ${H}`); });
+/* ---------- areas and views ---------- */
+// A view is what the canvas shows: the overview, or one area's map. Each view keeps
+// its own nodes, edges, lanes and DOM, and is swapped into the world when shown.
+const HOME = {};   // system id → { area, node }, for every system defined in a map
+AREAS.forEach(a => (MAPS[a.id]?.nodes || []).forEach(n => {
+  if (n.ref) return;
+  if (HOME[n.id]) console.warn(`System id "${n.id}" is used in both ${HOME[n.id].area.id} and ${a.id}; ids must be unique`);
+  else HOME[n.id] = { area:a, node:n };
+}));
+const mapped = a => !!MAPS[a.id];
+const plural = (n, word) => `${n} ${word}${n === 1 ? "" : "s"}`;
+const countOf = a => mapped(a) ? { systems:MAPS[a.id].nodes.filter(n => !n.ref).length, links:MAPS[a.id].edges.length } : null;
 
-/* ---------- lanes ---------- */
-const laneLayer = $("laneLayer");
-LANES.forEach(l => {
-  const y = l.y ?? 110, h = l.h ?? H - 170;
-  l.g = svgEl("g", { class:"lane-group" });
-  l.g.appendChild(svgEl("rect", { class:"lane", x:l.x, y, width:l.w, height:h, rx:22 }));
-  const t = svgEl("text", { class:"lane-label", x:l.x + 18, y:y - 14, "text-anchor":"start" });
-  t.textContent = l.label.toUpperCase();
-  l.g.appendChild(t);
-  laneLayer.appendChild(l.g);
-});
-CAPTIONS.forEach(c => {
-  const t = svgEl("text", { class:"caption", x:c.x, y:c.y, "text-anchor":"middle" });
-  t.textContent = c.text.toUpperCase();
-  c.g = svgEl("g", { class:"lane-group" });
-  c.g.appendChild(t);
-  laneLayer.appendChild(c.g);
-});
+function areaView(a) {
+  const m = MAPS[a.id];
+  const nodes = m.nodes.map(n => {
+    if (!n.ref) { n.units = [].concat(n.unit); return n; }
+    const h = HOME[n.ref];
+    if (!h) { console.warn(`${a.id}: no system with id "${n.ref}" to reference`); return null; }
+    const { el:_e, units:_u, ...src } = h.node;
+    return { ...src, id:n.ref, x:n.x, y:n.y, desc:n.desc ?? src.desc, unit:n.unit, units:[].concat(n.unit ?? []), home:h.area, portal:src.kind !== "core" };
+  }).filter(Boolean);
+  const ids = new Set(nodes.map(n => n.id));
+  const edges = m.edges.filter(e => ids.has(e.from) && ids.has(e.to) || console.warn(`${a.id}: edge ${e.from} → ${e.to} names a system not in this map`));
+  return { id:a.id, area:a, title:m.title, blurb:m.blurb, W:m.W, H:m.H, center:m.center, contextUnits:m.contextUnits || [], units:m.units || [], nodes, edges, lanes:m.lanes || [], captions:m.captions || [] };
+}
 
-/* ---------- nodes ---------- */
-NODES.forEach(n => {
-  const el = document.createElement("div");
-  el.className = `node k-${n.kind}${n.unlinked ? " unlinked" : ""}`;
-  el.tabIndex = 0;
-  el.setAttribute("role", "button");
-  el.setAttribute("aria-label", `${n.name}, ${n.type}`);
-  el.dataset.id = n.id;
-  const hub = ["core", "mortgage", "commercial", "consumer", "indirect", "smallbiz", "ai"].includes(n.kind);
-  el.innerHTML = `${hub && !reduceMotion ? '<div class="pulse"></div>' : ""}
-    <div class="node-core"><div class="node-icon"></div><div><div class="node-name"></div><div class="node-type"></div></div>${n.tag ? '<span class="tag"></span>' : ""}</div>`;
-  el.querySelector(".node-icon").textContent = n.icon;
-  el.querySelector(".node-name").textContent = n.name;
-  el.querySelector(".node-type").textContent = n.type;
-  if (n.tag) el.querySelector(".tag").textContent = n.tag;
-  n.el = el;
-  nodesHost.appendChild(el);
-});
+// The overview: the core at the centre, one tile per area around it. Lines are
+// derived from the maps: an area links to the core when any of its edges touches it,
+// and to another area when it uses a portal to one of that area's systems.
+function overviewView() {
+  const coreHome = HOME[OVERVIEW.core];
+  const { el:_e, units:_u, ...core } = coreHome.node;
+  const tiles = AREAS.map(a => ({ id:`area:${a.id}`, kind:"area", area:a, name:a.label, type:"Business area", icon:a.icon, desc:a.desc, units:[] }));
+  const edges = [];
+  AREAS.forEach(a => {
+    const t = `area:${a.id}`, c = countOf(a);
+    if (!c) { edges.push({ from:OVERVIEW.core, to:t, flow:"unmapped" }); return; }
+    const m = MAPS[a.id], used = new Set(m.edges.flatMap(e => [e.from, e.to]));
+    if (used.has(OVERVIEW.core)) edges.push({ from:OVERVIEW.core, to:t, flow:"both", label:"Exchanges data", note:`${plural(c.systems, "system")} mapped` });
+    m.nodes.filter(n => n.ref && n.ref !== OVERVIEW.core && used.has(n.ref) && HOME[n.ref]).forEach(n => {
+      const o = `area:${HOME[n.ref].area.id}`;
+      if (o !== t && !edges.some(e => e.from === o && e.to === t || e.from === t && e.to === o)) edges.push({ from:t, to:o, flow:"both", label:"Shared systems" });
+    });
+  });
+  return { id:"overview", title:OVERVIEW.title, blurb:OVERVIEW.blurb, W:1000, H:800, center:OVERVIEW.core, contextUnits:[], units:[], lanes:[], captions:[], edges,
+    nodes:[{ ...core, desc:OVERVIEW.coreDesc, units:[] }, ...tiles] };
+}
 
+// Tiles sit on an ellipse around the core; on a phone, in two columns above and below it.
+function layoutOverview(v, compact) {
+  const tiles = v.nodes.filter(n => n.kind === "area"), core = v.byId[v.center];
+  const hw = compact ? 86 : 165, hh = compact ? 80 : 62, pts = [];
+  if (compact) {
+    const rows = Math.ceil(tiles.length / 2), above = Math.floor(rows / 2);
+    tiles.forEach((t, i) => {
+      const r = Math.floor(i / 2), last = i === tiles.length - 1 && i % 2 === 0;
+      const y = r < above ? -140 - (above - 1 - r) * 175 : 140 + (r - above) * 175;
+      pts.push([last ? 0 : (i % 2 ? 95 : -95), y]);
+    });
+  } else {
+    tiles.forEach((t, i) => { const a = -Math.PI / 2 + i * 2 * Math.PI / tiles.length; pts.push([Math.cos(a) * 560, Math.sin(a) * 270]); });
+  }
+  const m = compact ? 10 : 40;
+  const x0 = Math.min(-90, ...pts.map(p => p[0] - hw)) - m, x1 = Math.max(90, ...pts.map(p => p[0] + hw)) + m;
+  const y0 = Math.min(-40, ...pts.map(p => p[1] - hh)) - m, y1 = Math.max(40, ...pts.map(p => p[1] + hh)) + m;
+  v.W = Math.round(x1 - x0); v.H = Math.round(y1 - y0); v.compact = compact;
+  [[0, 0], ...pts].forEach(([x, y], i) => { const n = i ? tiles[i - 1] : core; n.x = x - x0; n.y = y - y0; });
+  v.defaults = Object.fromEntries(v.nodes.map(n => [n.id, { x:n.x, y:n.y }]));
+}
+
+/* ---------- building a view's DOM ---------- */
+function buildLanes(v) {
+  v.lanes.forEach(l => {
+    const y = l.y ?? 110, h = l.h ?? v.H - 170;
+    l.g = svgEl("g", { class:"lane-group" });
+    l.g.appendChild(svgEl("rect", { class:"lane", x:l.x, y, width:l.w, height:h, rx:22 }));
+    const t = svgEl("text", { class:"lane-label", x:l.x + 18, y:y - 14, "text-anchor":"start" });
+    t.textContent = l.label.toUpperCase();
+    l.g.appendChild(t);
+  });
+  v.captions.forEach(c => {
+    const t = svgEl("text", { class:"caption", x:c.x, y:c.y, "text-anchor":"middle" });
+    t.textContent = c.text.toUpperCase();
+    c.g = svgEl("g", { class:"lane-group" });
+    c.g.appendChild(t);
+  });
+}
+
+function buildNode(n) {
+  const e = document.createElement("div");
+  e.tabIndex = 0;
+  e.setAttribute("role", "button");
+  e.dataset.id = n.id;
+  if (n.kind === "area") {
+    const c = countOf(n.area);
+    e.className = `node k-area${c ? "" : " empty"}`;
+    e.style.setProperty("--aa", `var(--${n.area.color}-a)`);
+    e.style.setProperty("--ab", `var(--${n.area.color}-b)`);
+    e.setAttribute("aria-label", c ? `${n.name}: ${plural(c.systems, "system")}. Open the map` : `${n.name}: not mapped yet`);
+    const core = el("div", "node-core"), meta = el("div", "tile-meta");
+    core.append(el("div", "node-icon", n.icon), el("div", "node-name", n.name), el("div", "tile-desc", n.desc), meta);
+    if (c) {
+      const count = el("span", "tile-count", plural(c.systems, "system"));
+      count.appendChild(el("span", "tile-conn", ` · ${plural(c.links, "connection")}`));
+      meta.append(count, el("span", "tile-open", "Open map →"));
+    } else meta.appendChild(el("span", "pill", "Not mapped yet"));
+    e.appendChild(core);
+  } else {
+    const tag = n.portal ? `↗ ${n.home.label.toUpperCase()}` : n.tag;
+    e.className = `node k-${n.kind}${n.unlinked ? " unlinked" : ""}${n.portal ? " portal" : ""}`;
+    e.setAttribute("aria-label", n.portal ? `${n.name}, ${n.type}, in ${n.home.label}. Opens the ${n.home.label} map` : `${n.name}, ${n.type}`);
+    if (n.portal) e.title = `Open in the ${n.home.label} map`;
+    e.innerHTML = `${HUB_KINDS.includes(n.kind) && !n.portal && !reduceMotion ? '<div class="pulse"></div>' : ""}
+    <div class="node-core"><div class="node-icon"></div><div><div class="node-name"></div><div class="node-type"></div></div>${tag ? '<span class="tag"></span>' : ""}</div>`;
+    e.querySelector(".node-icon").textContent = n.icon;
+    e.querySelector(".node-name").textContent = n.name;
+    e.querySelector(".node-type").textContent = n.type;
+    if (tag) e.querySelector(".tag").textContent = tag;
+  }
+  e.addEventListener("pointerdown", ev => {
+    if (ev.button !== 0) return;
+    ev.stopPropagation();
+    e.setPointerCapture(ev.pointerId);
+    gesture = { kind:"node", node:n, sx:ev.clientX, sy:ev.clientY, ox:n.x, oy:n.y, moved:false };
+  });
+  e.addEventListener("keydown", ev => {
+    if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); activate(n); }
+  });
+  n.el = e;
+}
+
+function buildEdge(e, i) {
+  const g = svgEl("g", { class:`edge f-${e.flow}${e.manual ? " is-manual" : ""}` });
+  g.style.setProperty("--ec", edgeColor(e));
+  e.glow = svgEl("path", { class:"link glow" });
+  e.fwd  = svgEl("path", { class:"link main" });
+  e.oneWay = e.flow === "one";
+  g.append(e.glow, e.fwd);
+  if (e.flow === "both") { e.back = svgEl("path", { class:"link back" }); g.appendChild(e.back); }
+  if (e.oneWay) { e.chev = svgEl("path", { class:"chev", d:"M -5 -5 L 2 0 L -5 5" }); g.appendChild(e.chev); }
+  e.dots = [];
+  if (!reduceMotion && (e.flow === "both" || e.flow === "one")) {
+    // One-way: two staggered particles travelling from → to. Bidirectional: one each way.
+    e.dots.push({ el: svgEl("circle", { r:2.7, class:"particle" }), path: e.fwd, off:0 });
+    if (e.oneWay) e.dots.push({ el: svgEl("circle", { r:2.7, class:"particle" }), path: e.fwd, off:.5 });
+    else e.dots.push({ el: svgEl("circle", { r:2.7, class:"particle" }), path: e.back, off:0 });
+    e.dots.forEach(d => g.appendChild(d.el));
+  }
+  e.duration = (e.manual ? 7000 : 4200) + i * 150;
+  e.phase = (i * 0.37) % 1;
+  e.g = g;
+}
+
+// Legend: the connection styles and system types that appear in the view
+function buildLegend(v) {
+  const item = (mark, text) => { const d = el("div", "legend-item"); d.append(mark, ` ${text}`); return d; };
+  const line = key => { const i = el("i", key === "both" || key === "one" ? "lg" : `lg ${key}`); i.style.setProperty("--ec", key === "manual" ? MANUAL_COLOR : FLOW[key].color); return i; };
+  const swatch = (bg, cls) => { const i = el("i", cls ? `swatch ${cls}` : "swatch"); i.style.background = bg; return i; };
+  const flows = new Set(v.edges.map(e => e.manual ? "manual" : e.flow));
+  const ov = v.id === "overview";
+  v.legend = FLOW_INFO.filter(f => flows.has(f.key)).map(f => item(line(f.key), ov && f.key === "both" ? "Exchanges data" : f.label));
+  const kinds = new Set(v.nodes.map(n => n.kind));
+  const sw = Object.keys(KIND_SWATCH).filter(k => kinds.has(k)).map(k => item(swatch(gradient(KIND_SWATCH[k][0])), KIND_SWATCH[k][1]));
+  if (v.nodes.some(n => n.portal)) sw.push(item(swatch("#101c2a", "portal"), "In another area"));
+  if (sw.length) v.legend.push(el("span", "legend-sep"), ...sw);
+}
+
+function buildChips(v) {
+  v.chips = !v.units.length ? [] : [{ id:"", label:"All" }, ...v.units].map(u => {
+    const b = document.createElement("button");
+    b.className = "chip";
+    b.type = "button";
+    if (u.color) { b.style.setProperty("--sw", u.color); b.appendChild(document.createElement("i")); }
+    b.append(u.label);
+    b.addEventListener("click", () => {
+      if (!u.id) activeUnits.clear();
+      else if (activeUnits.has(u.id)) activeUnits.delete(u.id);
+      else activeUnits.add(u.id);
+      applyFilter(true);
+      syncHash();
+    });
+    return { unit:u.id, el:b };
+  });
+}
+
+function buildView(v) {
+  v.byId = Object.fromEntries(v.nodes.map(n => [n.id, n]));
+  if (v.id === "overview") layoutOverview(v, compactQuery.matches);
+  else v.defaults = Object.fromEntries(v.nodes.map(n => [n.id, { x:n.x, y:n.y }]));
+  buildLanes(v);
+  v.nodes.forEach(buildNode);
+  v.edges.forEach(buildEdge);
+  buildLegend(v);
+  buildChips(v);
+  return v;
+}
+
+/* ---------- geometry ---------- */
 function placeNode(n) { n.el.style.left = n.x + "px"; n.el.style.top = n.y + "px"; }
 
 function placeOrbits() {
-  const c = byId[ORBIT_CENTER];
-  ["halo", "orbit1", "orbit2"].forEach(id => { const e = $(id); e.style.left = c.x + "px"; e.style.top = c.y + "px"; });
+  const c = view.byId[view.center];
+  ["halo", "orbit1", "orbit2"].forEach(id => { const e = $(id); e.hidden = !c; if (c) { e.style.left = c.x + "px"; e.style.top = c.y + "px"; } });
 }
 
-/* ---------- edges ---------- */
+function sizeWorld() {
+  world.style.width = view.W + "px";
+  world.style.height = view.H + "px";
+  ["laneLayer", "linkLayer"].forEach(id => { const s = $(id); s.setAttribute("width", view.W); s.setAttribute("height", view.H); s.setAttribute("viewBox", `0 0 ${view.W} ${view.H}`); });
+}
+
 // Polyline through world-space waypoints with rounded corners, for long routes around the map
 function routed(pts, r = 40) {
   let d = `M ${pts[0].x} ${pts[0].y}`;
@@ -620,32 +910,9 @@ function curve(a, b, offset, k = 0.45, c1, c2, via) {
   return `M ${ax} ${ay} C ${ax + dir * bend} ${ay}, ${bx - dir * bend} ${by}, ${bx} ${by}`;
 }
 
-EDGES.forEach((e, i) => {
-  const g = svgEl("g", { class:`edge f-${e.flow}${e.manual ? " is-manual" : ""}` });
-  g.style.setProperty("--ec", edgeColor(e));
-  e.glow = svgEl("path", { class:"link glow" });
-  e.fwd  = svgEl("path", { class:"link main" });
-  e.oneWay = e.flow === "one";
-  g.append(e.glow, e.fwd);
-  if (e.flow === "both") { e.back = svgEl("path", { class:"link back" }); g.appendChild(e.back); }
-  if (e.oneWay) { e.chev = svgEl("path", { class:"chev", d:"M -5 -5 L 2 0 L -5 5" }); g.appendChild(e.chev); }
-  e.dots = [];
-  if (!reduceMotion && e.flow !== "none" && e.flow !== "inactive") {
-    // One-way: two staggered particles travelling from → to. Bidirectional: one each way.
-    e.dots.push({ el: svgEl("circle", { r:2.7, class:"particle" }), path: e.fwd, off:0 });
-    if (e.oneWay) e.dots.push({ el: svgEl("circle", { r:2.7, class:"particle" }), path: e.fwd, off:.5 });
-    else e.dots.push({ el: svgEl("circle", { r:2.7, class:"particle" }), path: e.back, off:0 });
-    e.dots.forEach(d => g.appendChild(d.el));
-  }
-  e.duration = (e.manual ? 7000 : 4200) + i * 150;
-  e.phase = (i * 0.37) % 1;
-  e.g = g;
-  edgesG.appendChild(g);
-});
-
 function updateEdges() {
-  EDGES.forEach(e => {
-    const a = byId[e.from], b = byId[e.to];
+  view.edges.forEach(e => {
+    const a = view.byId[e.from], b = view.byId[e.to];
     const d = curve(a, b, 0, e.bend, e.c1, e.c2, e.via);
     e.fwd.setAttribute("d", d);
     e.glow.setAttribute("d", d);
@@ -660,9 +927,11 @@ function updateEdges() {
   });
 }
 
+function refreshGeometry() { sizeWorld(); view.nodes.forEach(placeNode); placeOrbits(); updateEdges(); }
+
 /* ---------- particle loop (one rAF, positions follow live geometry) ---------- */
 function tick(now) {
-  for (const e of EDGES) {
+  for (const e of view.edges) {
     const t = (now / e.duration + e.phase) % 1;
     for (const dot of e.dots) {
       if (!dot.len) continue;
@@ -682,14 +951,15 @@ const scale = () => fit * zoom;
 
 function safeArea() {
   const r = canvas.getBoundingClientRect(), small = r.width < 750;
-  const top = $("filters").getBoundingClientRect().bottom - r.top + (small ? 8 : 18);
-  const bottom = r.bottom - $("legend").getBoundingClientRect().top + (small ? 8 : 14);
+  const above = filtersHost.hidden ? document.querySelector(".heading") : filtersHost;
+  const top = above.getBoundingClientRect().bottom - r.top + (small ? 8 : 18);
+  const bottom = r.bottom - legendHost.getBoundingClientRect().top + (small ? 8 : 14);
   return { r, small, top, bottom, w:r.width - (small ? 16 : 64), h:r.height - top - bottom };
 }
 
 function computeFit() {
   const a = safeArea();
-  fit = clamp(Math.min(a.w / W, a.h / H), a.small ? 0.3 : 0.4, 1.1);
+  fit = clamp(Math.min(a.w / view.W, a.h / view.H), a.small ? 0.3 : 0.4, 1.1);
   oy = (a.top - a.bottom) / 2;
 }
 
@@ -719,13 +989,23 @@ function canvasCentre() {
   return [r.left + r.width / 2, r.top + r.height / 2 + oy];
 }
 
+// Centre a node and leave room for the details panel (right on desktop, bottom on a phone)
+function centreOn(n) {
+  const a = safeArea();
+  zoom = clamp(Math.max(zoom, 1.3), 0.5, 2.6);
+  const s = scale();
+  tx = -(n.x - view.W / 2) * s - (a.small ? 0 : 150);
+  ty = -(n.y - view.H / 2) * s - (a.small ? a.h * 0.22 : 0);
+  applyView(true);
+}
+
 $("zoomIn").addEventListener("click", () => zoomAt(...canvasCentre(), zoom * 1.2, true));
 $("zoomOut").addEventListener("click", () => zoomAt(...canvasCentre(), zoom / 1.2, true));
 $("reset").addEventListener("click", () => {
-  activeUnits.clear(); applyFilter(false);
+  activeUnits.clear(); applyFilter(false); syncHash();
   zoom = 1; tx = ty = 0;
-  NODES.forEach(n => { n.x = DEFAULT_POS[n.id].x; n.y = DEFAULT_POS[n.id].y; placeNode(n); });
-  placeOrbits(); updateEdges(); deselect(); applyView(true);
+  view.nodes.forEach(n => { n.x = view.defaults[n.id].x; n.y = view.defaults[n.id].y; });
+  refreshGeometry(); deselect(); applyView(true);
 });
 
 canvas.addEventListener("wheel", e => {
@@ -735,18 +1015,6 @@ canvas.addEventListener("wheel", e => {
 
 /* ---------- pointer: drag nodes, pan background, click to select ---------- */
 let gesture = null;
-
-NODES.forEach(n => {
-  n.el.addEventListener("pointerdown", e => {
-    if (e.button !== 0) return;
-    e.stopPropagation();
-    n.el.setPointerCapture(e.pointerId);
-    gesture = { kind:"node", node:n, sx:e.clientX, sy:e.clientY, ox:n.x, oy:n.y, moved:false };
-  });
-  n.el.addEventListener("keydown", e => {
-    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); select(n.id); }
-  });
-});
 
 canvas.addEventListener("pointerdown", e => {
   if (e.button !== 0 || e.target.closest(".node")) return;
@@ -765,10 +1033,10 @@ window.addEventListener("pointermove", e => {
   }
   if (gesture.kind === "node") {
     const n = gesture.node, s = scale();
-    n.x = clamp(gesture.ox + dx / s, 80, W - 80);
-    n.y = clamp(gesture.oy + dy / s, 40, H - 40);
+    n.x = clamp(gesture.ox + dx / s, 80, view.W - 80);
+    n.y = clamp(gesture.oy + dy / s, 40, view.H - 40);
     placeNode(n);
-    if (n.id === ORBIT_CENTER) placeOrbits();
+    if (n.id === view.center) placeOrbits();
     updateEdges();
   } else {
     tx = gesture.otx + dx; ty = gesture.oty + dy;
@@ -783,62 +1051,78 @@ function endGesture(e) {
   canvas.classList.remove("panning");
   if (g.kind === "node") g.node.el.classList.remove("dragging");
   if (e.type === "pointerup" && !g.moved) {
-    if (g.kind === "node") select(g.node.id); else deselect();
+    if (g.kind === "node") activate(g.node); else deselect();
   }
 }
 window.addEventListener("pointerup", endGesture);
 window.addEventListener("pointercancel", endGesture);
 
-/* ---------- selection + details panel ---------- */
-let selected = null;
+// Clicking a node: a mapped area's tile opens its map, a portal opens the system's
+// home area, anything else (including a not-mapped tile) shows its details.
+function activate(n) {
+  if (n.kind === "area" && mapped(n.area)) return go(n.area.id);
+  if (n.portal) return go(n.home.id, n.id);
+  select(n.id);
+}
 
-function connectionsOf(id) {
-  return EDGES.filter(e => e.from === id || e.to === id).map(e => {
+/* ---------- selection + details panel ---------- */
+let selected = null, homeLink = null;
+
+function connectionsOf(v, id) {
+  return v.edges.filter(e => e.from === id || e.to === id).map(e => {
     const other = e.from === id ? e.to : e.from;
     let arrow = "↔";
     if (e.flow === "one") arrow = e.from === id ? "→" : "←";
     if (e.flow === "none") arrow = "○";
-    if (e.flow === "inactive") arrow = "⋯";
-    return { other: byId[other], arrow, edge: e };
+    if (e.flow === "inactive" || e.flow === "unmapped") arrow = "⋯";
+    return { other: v.byId[other], arrow, edge: e };
   });
 }
 
 function select(id) {
-  const n = byId[id];
+  const n = view.byId[id];
+  if (!n) return;
   // Jumping to a system hidden by the filter clears the filter first
-  if (n.el.classList.contains("filtered-out")) { activeUnits.clear(); applyFilter(false); }
+  if (n.el.classList.contains("filtered-out")) { activeUnits.clear(); applyFilter(false); syncHash(); }
   selected = id;
-  const conns = connectionsOf(id);
+  const conns = connectionsOf(view, id);
   const linked = new Set([id, ...conns.map(c => c.other.id)]);
 
-  NODES.forEach(x => {
+  view.nodes.forEach(x => {
     x.el.classList.toggle("selected", x.id === id);
     x.el.classList.toggle("dim", !linked.has(x.id));
   });
-  EDGES.forEach(e => {
+  view.edges.forEach(e => {
     const on = e.from === id || e.to === id;
     e.g.classList.toggle("active", on);
     e.g.classList.toggle("dim", !on);
   });
 
-  $("pKicker").textContent = KIND_LABEL[n.kind] || "Platform details";
+  const empty = n.kind === "area" && !mapped(n.area);
+  $("pKicker").textContent = n.kind === "area" ? (empty ? "Not mapped yet" : "Business area") : (KIND_LABEL[n.kind] || "Platform details");
   $("pTitle").textContent = n.name;
   $("pDesc").textContent = n.desc;
+  $("pNote").hidden = !empty;
+  $("pNote").textContent = empty ? "This area's systems and integrations haven't been added to the atlas yet." : "";
+  $("pDetail").hidden = empty;
+  homeLink = n.home && n.home !== view.area ? { area:n.home.id, id:n.id } : null;
+  $("pHome").hidden = !homeLink;
+  if (homeLink) $("pHome").textContent = `Open in the ${n.home.label} map ↗`;
   const host = $("pConnections");
   host.innerHTML = "";
   conns.forEach(c => {
     const row = document.createElement("div");
     row.className = "conn";
     row.style.setProperty("--ec", edgeColor(c.edge));
-    const f = c.edge.flow, src = byId[c.edge.from].name, dst = byId[c.edge.to].name;
-    const base = f === "one" ? `${src} → ${dst}` : FLOW[f].label;
+    const f = c.edge.flow, src = view.byId[c.edge.from].name, dst = view.byId[c.edge.to].name;
+    const base = f === "one" ? `${src} → ${dst}` : (c.edge.label || FLOW[f].label);
     const flowText = c.edge.manual ? `Manual, ${f === "one" ? base : "bidirectional"}` : (f === "one" ? `One-way, ${base}` : base);
     row.innerHTML = `<span class="conn-arrow"></span><span><span class="conn-name"></span><span class="conn-note"></span>${c.edge.note ? '<span class="conn-note warn"></span>' : ""}</span>`;
     row.querySelector(".conn-arrow").textContent = c.arrow;
     row.querySelector(".conn-name").textContent = c.other.name;
     row.querySelectorAll(".conn-note")[0].textContent = `${c.other.type} · ${flowText}`;
     if (c.edge.note) row.querySelector(".conn-note.warn").textContent = c.edge.note;
-    row.addEventListener("click", () => select(c.other.id));
+    row.addEventListener("click", () => activate(c.other));
     host.appendChild(row);
   });
   if (!conns.length) {
@@ -854,45 +1138,30 @@ function select(id) {
 function deselect() {
   selected = null;
   panel.classList.remove("open");
-  NODES.forEach(x => x.el.classList.remove("selected", "dim"));
-  EDGES.forEach(e => e.g.classList.remove("active", "dim"));
+  if (!view) return;
+  view.nodes.forEach(x => x.el.classList.remove("selected", "dim"));
+  view.edges.forEach(e => e.g.classList.remove("active", "dim"));
 }
 
 $("close").addEventListener("click", deselect);
+$("pHome").addEventListener("click", () => { if (homeLink) go(homeLink.area, homeLink.id); });
 document.addEventListener("keydown", e => { if (e.key === "Escape") deselect(); });
 
 /* ---------- business unit filter ---------- */
 // No units selected = show everything. Otherwise show the selected units' systems,
-// plus any system they connect to (faded). The core and AI platform are always shown
-// in full as context, but only their links into the selected units, not to other units.
-const CONTEXT_UNITS = ["core", "ai"];
+// plus any system they connect to (faded). Context units (e.g. the core and AI
+// platform) are always shown in full, but only their links into the selected units.
 const activeUnits = new Set();
-const filtersHost = $("filters");
+const filterLabel = el("span", "filter-label", "Business unit");
 const inUnits = units => !activeUnits.size || units.some(u => activeUnits.has(u));
-const inView = units => inUnits(units) || units.some(u => CONTEXT_UNITS.includes(u));
-
-const chips = [{ id:"", label:"All" }, ...UNITS].map(u => {
-  const b = document.createElement("button");
-  b.className = "chip";
-  b.type = "button";
-  if (u.color) { b.style.setProperty("--sw", u.color); b.appendChild(document.createElement("i")); }
-  b.append(u.label);
-  b.addEventListener("click", () => {
-    if (!u.id) activeUnits.clear();
-    else if (activeUnits.has(u.id)) activeUnits.delete(u.id);
-    else activeUnits.add(u.id);
-    applyFilter(true);
-  });
-  filtersHost.appendChild(b);
-  return { unit:u.id, el:b };
-});
+const inView = units => inUnits(units) || units.some(u => view.contextUnits.includes(u));
 
 function applyFilter(refit) {
-  const sel = new Set(NODES.filter(n => inUnits(n.units)).map(n => n.id));
-  const shown = new Set(NODES.filter(n => inView(n.units)).map(n => n.id));
+  const sel = new Set(view.nodes.filter(n => inUnits(n.units)).map(n => n.id));
+  const shown = new Set(view.nodes.filter(n => inView(n.units)).map(n => n.id));
   const ghost = new Set();
   let edgeCount = 0;
-  EDGES.forEach(e => {
+  view.edges.forEach(e => {
     const a = sel.has(e.from), b = sel.has(e.to);
     const on = a || b || (shown.has(e.from) && shown.has(e.to));
     if (a && !shown.has(e.to)) ghost.add(e.to);
@@ -900,39 +1169,194 @@ function applyFilter(refit) {
     e.g.classList.toggle("filtered-out", !on);
     if (on) edgeCount++;
   });
-  NODES.forEach(n => {
+  view.nodes.forEach(n => {
     n.el.classList.toggle("ghost", ghost.has(n.id));
     n.el.classList.toggle("filtered-out", !shown.has(n.id) && !ghost.has(n.id));
   });
-  [...LANES, ...CAPTIONS].forEach(l => l.g.classList.toggle("filtered-out", !inView(l.units)));
-  chips.forEach(c => c.el.setAttribute("aria-pressed", c.unit ? activeUnits.has(c.unit) : !activeUnits.size));
-
-  $("counts").textContent = activeUnits.size
-    ? `${shown.size} of ${NODES.length} systems  /  ${edgeCount} of ${EDGES.length} connections`
-    : `${NODES.length} systems  /  ${EDGES.length} connections`;
-
-  // Keep the filter in the URL so a filtered view can be bookmarked or linked
-  try { history.replaceState(null, "", activeUnits.size ? `#units=${[...activeUnits].join(",")}` : location.pathname + location.search); } catch (_) {}
-
-  if (selected && byId[selected].el.classList.contains("filtered-out")) deselect();
+  [...view.lanes, ...view.captions].forEach(l => l.g.classList.toggle("filtered-out", !inView(l.units)));
+  view.chips.forEach(c => c.el.setAttribute("aria-pressed", c.unit ? activeUnits.has(c.unit) : !activeUnits.size));
+  $("counts").textContent = countsText([...shown].filter(id => !view.byId[id].home).length, edgeCount);
+  if (selected && view.byId[selected].el.classList.contains("filtered-out")) deselect();
   if (refit) fitToVisible();
+}
+
+function countsText(shownCount, edgeCount) {
+  if (view.id === "overview") {
+    const m = AREAS.filter(mapped);
+    return `${AREAS.length} areas  /  ${m.length} mapped  /  ${m.reduce((s, a) => s + countOf(a).systems, 0)} systems`;
+  }
+  const systems = view.nodes.filter(n => !n.home).length;   // references are counted in their home area
+  return activeUnits.size
+    ? `${shownCount} of ${systems} systems  /  ${edgeCount} of ${view.edges.length} connections`
+    : `${plural(systems, "system")}  /  ${plural(view.edges.length, "connection")}`;
 }
 
 function fitToVisible() {
   if (!activeUnits.size) { zoom = 1; tx = ty = 0; applyView(true); return; }
-  const vis = NODES.filter(n => !n.el.classList.contains("filtered-out"));
+  const vis = view.nodes.filter(n => !n.el.classList.contains("filtered-out"));
   if (!vis.length) return;
   let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
   vis.forEach(n => { x0 = Math.min(x0, n.x - 110); x1 = Math.max(x1, n.x + 110); y0 = Math.min(y0, n.y - 50); y1 = Math.max(y1, n.y + 50); });
   // Keep the top of each visible lane (its label) in view too
-  LANES.filter(l => !l.g.classList.contains("filtered-out")).forEach(l => { y0 = Math.min(y0, l.y); });
+  view.lanes.filter(l => !l.g.classList.contains("filtered-out")).forEach(l => { y0 = Math.min(y0, l.y); });
   const a = safeArea();
   zoom = clamp(Math.min((a.w - 40) / (x1 - x0), (a.h - 20) / (y1 - y0)) / fit, 0.5, 2.6);
   const s = scale();
-  tx = -((x0 + x1) / 2 - W / 2) * s;
-  ty = -((y0 + y1) / 2 - H / 2) * s;
+  tx = -((x0 + x1) / 2 - view.W / 2) * s;
+  ty = -((y0 + y1) / 2 - view.H / 2) * s;
   applyView(true);
 }
+
+/* ---------- switching views + URL hash ---------- */
+// #overview (or no hash) is the overview, #lending an area, #lending&units=consumer,indirect
+// a filtered area. #units=… links from before areas existed open Lending. Opening a view
+// adds a history entry (so back/forward work); changing the filter replaces it.
+let view = null, enterTimer = 0;
+const views = {};
+
+function show(id) {
+  const v = views[id] || views.overview;
+  if (v === view) return false;
+  deselect();
+  view = v;
+  activeUnits.clear();
+  laneLayer.replaceChildren(...v.lanes.map(l => l.g), ...v.captions.map(c => c.g));
+  edgesG.replaceChildren(...v.edges.map(e => e.g));
+  nodesHost.replaceChildren(...v.nodes.map(n => n.el));
+  filtersHost.replaceChildren(...(v.chips.length ? [filterLabel, ...v.chips.map(c => c.el)] : []));
+  filtersHost.hidden = !v.chips.length;
+  legendHost.replaceChildren(...v.legend);
+  const crumbs = $("crumbs");
+  if (v.area) {
+    const home = el("a", null, "‹ Bank overview");
+    home.href = "#overview";
+    const here = el("span", null, v.area.label);
+    here.setAttribute("aria-current", "page");
+    crumbs.replaceChildren(home, el("span", "sep", "/"), here);
+  } else crumbs.replaceChildren("Systems landscape / Bank-wide");
+  $("title").textContent = v.title;
+  $("blurb").textContent = v.blurb;
+  $("hint").textContent = (v.area ? ["Click a node to explore", "Drag to pan or move nodes"] : ["Click an area to open its map", "Drag to pan"]).concat("Scroll to zoom").join("\u00a0 · \u00a0").toUpperCase();
+  document.title = v.area ? `${v.title} · Integration Atlas` : "Bank Technology Map · Integration Atlas";
+  if (v.id === "overview" && v.compact !== compactQuery.matches) layoutOverview(v, compactQuery.matches);
+  refreshGeometry();
+  computeFit();
+  zoom = 1; tx = ty = 0;
+  applyView(false);
+  applyFilter(false);
+  if (!reduceMotion) { canvas.classList.remove("enter"); void canvas.offsetWidth; canvas.classList.add("enter"); clearTimeout(enterTimer); enterTimer = setTimeout(() => canvas.classList.remove("enter"), 500); }
+  return true;
+}
+
+const hashFor = () => view.area ? `#${view.id}${activeUnits.size ? `&units=${[...activeUnits].join(",")}` : ""}` : "#overview";
+function syncHash() { try { history.replaceState(null, "", hashFor()); } catch (_) {} }
+
+function parseHash() {
+  const parts = decodeURIComponent(location.hash.slice(1)).split("&");
+  let id = parts[0], units = [];
+  parts.forEach(p => { if (p.startsWith("units=")) units = p.slice(6).split(",").filter(Boolean); });
+  if (id.startsWith("units=")) id = "lending";
+  const area = AREAS.find(a => a.id === id);
+  if (area && !mapped(area)) return { id:"overview", units:[], tile:`area:${id}` };
+  return { id:views[id] ? id : "overview", units };
+}
+
+function route() {
+  const h = parseHash();
+  const changed = show(h.id);
+  const want = h.units.filter(u => view.units.some(x => x.id === u));
+  if (want.length !== activeUnits.size || !want.every(u => activeUnits.has(u))) {
+    activeUnits.clear(); want.forEach(u => activeUnits.add(u));
+    applyFilter(!changed || !!want.length);
+  }
+  if (h.tile) select(h.tile);
+}
+window.addEventListener("hashchange", route);
+
+// Open a view (and optionally select a system in it), recording it in the history
+function go(id, sel) {
+  show(id);
+  if (sel && view.byId[sel]) {
+    select(sel);
+    centreOn(view.byId[sel]);
+    view.byId[sel].el.focus({ preventScroll:true });
+  }
+  if (location.hash !== hashFor()) location.hash = hashFor();
+}
+
+/* ---------- search across every area ---------- */
+const q = $("q"), results = $("results"), searchWrap = $("search"), searchToggle = $("searchToggle");
+const INDEX = Object.values(HOME).map(({ area, node }) => ({ area, node, unit:MAPS[area.id].units?.find(u => u.id === [].concat(node.unit)[0]) }));
+let hits = [], cursor = -1;
+
+function findSystems(text) {
+  const t = text.trim().toLowerCase();
+  if (!t) return [];
+  return INDEX.map(r => {
+    const name = r.node.name.toLowerCase(), rest = `${r.node.type} ${r.node.tag || ""}`.toLowerCase();
+    return { ...r, score: name.startsWith(t) ? 0 : name.includes(t) ? 1 : rest.includes(t) ? 2 : 9 };
+  }).filter(r => r.score < 9).sort((a, b) => a.score - b.score || a.node.name.localeCompare(b.node.name)).slice(0, 8);
+}
+
+function renderResults() {
+  results.textContent = "";
+  hits.forEach((h, i) => {
+    const li = el("li", `result k-${h.node.kind}`), txt = el("div");
+    li.id = `result${i}`;
+    li.setAttribute("role", "option");
+    li.setAttribute("aria-selected", i === cursor);
+    txt.append(el("b", null, h.node.name), el("small", null, `${h.node.type} · ${h.area.label}${h.unit ? ` › ${h.unit.label}` : ""}`));
+    li.append(el("div", "node-icon", h.node.icon), txt);
+    li.addEventListener("mousedown", e => e.preventDefault()); // keep focus in the box until chosen
+    li.addEventListener("click", () => choose(i));
+    results.appendChild(li);
+  });
+  const typed = !!q.value.trim();
+  if (typed && !hits.length) results.appendChild(el("li", "no-results", "No systems match"));
+  results.hidden = !typed;
+  q.setAttribute("aria-expanded", typed);
+  if (cursor >= 0) q.setAttribute("aria-activedescendant", `result${cursor}`); else q.removeAttribute("aria-activedescendant");
+  results.querySelector('[aria-selected="true"]')?.scrollIntoView({ block:"nearest" });
+}
+
+function openSearch() { searchWrap.classList.add("open"); searchToggle.setAttribute("aria-expanded", "true"); q.focus(); q.select(); }
+function closeSearch() {
+  searchWrap.classList.remove("open");
+  searchToggle.setAttribute("aria-expanded", "false");
+  results.hidden = true;
+  q.setAttribute("aria-expanded", "false");
+}
+
+function choose(i) {
+  const h = hits[i];
+  if (!h) return;
+  q.value = "";
+  hits = []; cursor = -1;
+  closeSearch();
+  q.blur();
+  go(h.area.id, h.node.id);
+}
+
+q.addEventListener("input", () => { hits = findSystems(q.value); cursor = hits.length ? 0 : -1; renderResults(); });
+q.addEventListener("focus", () => { if (q.value.trim()) renderResults(); });
+q.addEventListener("blur", closeSearch);
+q.addEventListener("keydown", e => {
+  if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+    e.preventDefault();
+    if (hits.length) { cursor = (cursor + (e.key === "ArrowDown" ? 1 : -1) + hits.length) % hits.length; renderResults(); }
+  } else if (e.key === "Enter") {
+    e.preventDefault();
+    choose(Math.max(cursor, 0));
+  } else if (e.key === "Escape") {
+    e.stopPropagation();
+    if (q.value) { q.value = ""; hits = []; cursor = -1; renderResults(); } else q.blur();
+  }
+});
+searchToggle.addEventListener("mousedown", e => e.preventDefault());
+searchToggle.addEventListener("click", () => searchWrap.classList.contains("open") ? q.blur() : openSearch());
+document.addEventListener("keydown", e => {
+  if (e.key === "/" && !e.ctrlKey && !e.metaKey && !e.altKey && !/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName)) { e.preventDefault(); openSearch(); }
+});
 
 /* ---------- download for offline sharing ---------- */
 $("download").addEventListener("click", async () => {
@@ -955,9 +1379,10 @@ $("download").addEventListener("click", async () => {
 });
 
 /* ---------- print: a clean, light sheet for sharing outside the bank ---------- */
-// Built from the live map each time (current filter and node positions), then
-// shown only by the print stylesheet. Page 1 is the map and legend, then a directory.
-const PRINT_COLOR = { both:"#12a191", one:"#4f6be6", manual:"#d6428c", inactive:"#8a9aac", none:"#8a9aac" };
+// Built from the live view each time (current filter and node positions), then shown
+// only by the print stylesheet. Page 1 is the map and legend, then a systems directory.
+// From the overview, page 1 is the overview, then a directory for each mapped area.
+const PRINT_COLOR = { both:"#12a191", one:"#4f6be6", manual:"#d6428c", inactive:"#8a9aac", none:"#8a9aac", unmapped:"#9aa8b8" };
 const printColor = e => e.manual ? PRINT_COLOR.manual : PRINT_COLOR[e.flow];
 const KIND_INFO = {
   core:         ["Core banking", "System of record for accounts and loans"],
@@ -976,57 +1401,99 @@ const FLOW_INFO = [
   { key:"one",      label:"One-way",          text:"Automated feed in the direction of the arrow." },
   { key:"manual",   label:"Manual process",   text:"Data is moved by hand (re-keying, imaging or upload)." },
   { key:"inactive", label:"Not active (API)", text:"Connection is available or planned but not in use." },
-  { key:"none",     label:"No integration",   text:"Related systems with no data exchange." }
+  { key:"none",     label:"No integration",   text:"Related systems with no data exchange." },
+  { key:"unmapped", label:"Not mapped yet",   text:"The area's systems have not been added to the atlas yet." }
 ];
-const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
 const lineSample = key => {
   const svg = svgEl("svg", { width:34, height:10, viewBox:"0 0 34 10" });
-  const dash = { manual:"6 4", inactive:"5 5", none:"1.5 5" }[key];
+  const dash = { manual:"6 4", inactive:"5 5", none:"1.5 5", unmapped:"1.5 5" }[key];
   svg.appendChild(svgEl("line", { x1:1, y1:5, x2:33, y2:5, stroke:PRINT_COLOR[key], "stroke-width":2.4, "stroke-linecap":"round", ...(dash ? { "stroke-dasharray":dash } : {}) }));
   if (key === "one") svg.appendChild(svgEl("path", { d:"M 15 1.5 L 20 5 L 15 8.5", fill:"none", stroke:PRINT_COLOR.one, "stroke-width":2, "stroke-linecap":"round", "stroke-linejoin":"round" }));
   return svg;
 };
 const kindSwatch = k => {
-  const v = { core:"core", mortgage:"mort", commercial:"comm", consumer:"cons-hub", storage:"stor", construction:"cons", indirect:"ind", smallbiz:"sb", ai:"ai" }[k];
+  const v = KIND_SWATCH[k]?.[0];
   const sw = el("i", "p-sw");
-  sw.style.background = v ? `linear-gradient(140deg,var(--${v}-a),var(--${v}-b))` : "#e9f7f5";
+  sw.style.background = v ? gradient(v) : "#e9f7f5";
   if (!v) sw.style.border = "1px solid #9ad8d0";
   return sw;
 };
+const legendRow = (mark, title, text) => { const r = el("div", "p-row"), t = el("div"); t.append(el("b", null, title), el("span", null, text)); r.append(mark, t); return r; };
+const printFooter = (title, page) => { const f = el("footer", "p-foot"); f.append(el("span", null, `Integration Atlas · ${title}`), el("span", null, page)); return f; };
+
+// Systems directory for one view: its systems grouped by business unit
+function directory(v, nodes, edges, date, heading) {
+  const page = el("section", "p-page p-dir");
+  const dh = el("div", "p-head"), dt = el("div");
+  dt.append(el("div", "p-eyebrow", `Integration Atlas · ${v.title}`), el("h2", null, heading));
+  dh.append(dt, el("div", "p-meta", date));
+  page.appendChild(dh);
+  const ids = new Set(nodes.map(n => n.id));
+  const ARROW = { both:"↔", none:"○", inactive:"⋯" };
+  [...v.units].sort((a, b) => v.contextUnits.includes(b.id) - v.contextUnits.includes(a.id)).forEach(u => {
+    const group = nodes.filter(n => n.units[0] === u.id).sort((a, b) => (a.kind === "integration") - (b.kind === "integration"));
+    if (!group.length) return;
+    const sec = el("div", "p-unit"), h = el("h3"), dot = el("i"), table = el("table"), body = el("tbody");
+    dot.style.background = u.color;
+    h.append(dot, u.label);
+    group.forEach(n => {
+      const tr = el("tr"), sys = el("div", `p-sys k-${n.kind}`), names = el("div"), conns = el("td");
+      names.append(el("b", null, n.name), el("small", null, n.tag ? `${n.type} · ${n.tag}` : n.type));
+      sys.append(el("div", "node-icon", n.icon), names);
+      const td1 = el("td"); td1.appendChild(sys);
+      connectionsOf(v, n.id).filter(c => ids.has(c.other.id) && edges.includes(c.edge)).forEach(c => {
+        const row = el("span", "p-conn"), arrow = el("em", null, c.edge.flow === "one" ? (c.edge.from === n.id ? "→" : "←") : ARROW[c.edge.flow]);
+        arrow.style.color = printColor(c.edge);
+        const extra = [c.edge.manual && "manual", c.edge.flow === "inactive" && "not active", c.other.portal && `in ${c.other.home.label}`].filter(Boolean).join(", ");
+        row.append(arrow, c.other.name + (extra ? ` (${extra})` : ""));
+        conns.appendChild(row);
+      });
+      if (!conns.childNodes.length) conns.textContent = "No integrations";
+      tr.append(td1, el("td", null, n.desc), conns);
+      body.appendChild(tr);
+    });
+    table.appendChild(body);
+    sec.append(h, table);
+    page.appendChild(sec);
+  });
+  page.appendChild(printFooter(v.title, heading));
+  return page;
+}
 
 function buildPrint() {
   const sheet = $("printSheet");
   sheet.textContent = "";
-  const vis = NODES.filter(n => !n.el.classList.contains("filtered-out"));
-  const visEdges = EDGES.filter(e => !e.g.classList.contains("filtered-out"));
-  const visIds = new Set(vis.map(n => n.id));
-  const unitNames = [...activeUnits].map(u => UNITS.find(x => x.id === u).label);
+  const ov = view.id === "overview";
+  // The phone layout of the overview is too narrow for paper: print the wide one
+  if (ov && view.compact) { layoutOverview(view, false); refreshGeometry(); }
+  const vis = view.nodes.filter(n => !n.el.classList.contains("filtered-out"));
+  const visEdges = view.edges.filter(e => !e.g.classList.contains("filtered-out"));
+  const unitNames = [...activeUnits].map(u => view.units.find(x => x.id === u).label);
+  const mappedAreas = AREAS.filter(mapped);
   const date = new Date().toLocaleDateString(undefined, { year:"numeric", month:"long", day:"numeric" });
   const header = () => {
     const h = el("header", "p-head"), brand = el("div", "p-brand"), txt = el("div"), meta = el("div", "p-meta");
     brand.append(el("div", "logo", "✳"), txt);
-    txt.append(el("div", "p-eyebrow", "Integration Atlas · Systems landscape"), el("h1", null, "Lending technology map"),
-      el("p", null, "Consumer, indirect, small business, commercial and residential lending around the core and their integrations."));
-    const view = el("div"); view.append("View: "); view.appendChild(el("b", null, unitNames.length ? unitNames.join(", ") : "All business units"));
-    meta.append(view, el("div", null, `${vis.length} systems · ${visEdges.length} connections`), el("div", null, date));
+    txt.append(el("div", "p-eyebrow", "Integration Atlas · Systems landscape"), el("h1", null, view.title), el("p", null, view.blurb));
+    const viewLine = el("div"); viewLine.append("View: "); viewLine.appendChild(el("b", null, ov ? "Bank-wide overview" : unitNames.length ? unitNames.join(", ") : "All business units"));
+    meta.append(viewLine, el("div", null, ov ? $("counts").textContent.replace(/\s+\/\s+/g, " · ") : `${vis.filter(n => !n.home).length} systems · ${visEdges.length} connections`), el("div", null, date));
     h.append(brand, meta);
     return h;
   };
-  const footer = page => { const f = el("footer", "p-foot"); f.append(el("span", null, "Integration Atlas · Lending technology map"), el("span", null, page)); return f; };
 
   // Page 1: map
   const page1 = el("section", "p-page");
   const bounds = [Infinity, Infinity, -Infinity, -Infinity];
   const grow = (x0, y0, x1, y1) => { bounds[0] = Math.min(bounds[0], x0); bounds[1] = Math.min(bounds[1], y0); bounds[2] = Math.max(bounds[2], x1); bounds[3] = Math.max(bounds[3], y1); };
-  LANES.filter(l => !l.g.classList.contains("filtered-out")).forEach(l => grow(l.x, l.y - 34, l.x + l.w, l.y + l.h));
-  vis.forEach(n => grow(n.x - 105, n.y - 45, n.x + 105, n.y + 45));
+  view.lanes.filter(l => !l.g.classList.contains("filtered-out")).forEach(l => grow(l.x, l.y - 34, l.x + l.w, l.y + l.h));
+  vis.forEach(n => { const [hw, hh] = n.kind === "area" ? [170, 72] : [Math.max(105, n.el.offsetWidth / 2 + 12), 45]; grow(n.x - hw, n.y - hh, n.x + hw, n.y + hh); });
   const pad = 18, bx = bounds[0] - pad, by = bounds[1] - pad, bw = bounds[2] - bounds[0] + pad * 2, bh = bounds[3] - bounds[1] + pad * 2;
   const s = Math.min(990 / bw, 455 / bh);
   const map = el("div", "p-map");
   map.style.width = bw * s + "px"; map.style.height = bh * s + "px";
   const clone = world.cloneNode(true);
-  clone.querySelectorAll(".edge").forEach((g, i) => g.style.setProperty("--ec", printColor(EDGES[i])));
-  clone.querySelectorAll(".halo,.orbit,.particle,.pulse,.link.glow,.link.back,.filtered-out").forEach(x => x.remove());
+  clone.querySelectorAll(".edge").forEach((g, i) => g.style.setProperty("--ec", printColor(view.edges[i])));
+  clone.querySelectorAll(".halo,.orbit,.particle,.pulse,.link.glow,.link.back,.filtered-out,.tile-open").forEach(x => x.remove());
   clone.querySelectorAll(".dim,.selected,.active,.dragging").forEach(x => x.classList.remove("dim", "selected", "active", "dragging"));
   clone.querySelectorAll("[id]").forEach(x => x.removeAttribute("id"));
   clone.querySelectorAll("[tabindex]").forEach(x => x.removeAttribute("tabindex"));
@@ -1039,73 +1506,50 @@ function buildPrint() {
   const legend = el("div", "p-legend");
   const flows = new Set(visEdges.map(e => e.manual ? "manual" : e.flow));
   const colA = el("div"); colA.appendChild(el("h3", null, "Connections"));
-  FLOW_INFO.filter(f => flows.has(f.key)).forEach(f => {
-    const r = el("div", "p-row"), t = el("div");
-    t.append(el("b", null, f.label), el("span", null, f.text));
-    r.append(lineSample(f.key), t);
-    colA.appendChild(r);
-  });
-  const kinds = new Set(vis.map(n => n.kind));
-  const colB = el("div"), grid = el("div", "p-kinds"); colB.append(el("h3", null, "System types"), grid);
-  Object.keys(KIND_INFO).filter(k => kinds.has(k)).forEach(k => {
-    const r = el("div", "p-row"), t = el("div");
-    t.append(el("b", null, KIND_INFO[k][0]), el("span", null, KIND_INFO[k][1]));
-    r.append(kindSwatch(k), t);
-    grid.appendChild(r);
-  });
+  FLOW_INFO.filter(f => flows.has(f.key)).forEach(f => colA.appendChild(ov && f.key === "both"
+    ? legendRow(lineSample("both"), "Exchanges data", "The area's systems exchange data with the core. Each area's own map shows the individual integrations.")
+    : legendRow(lineSample(f.key), f.label, f.text)));
+  const colB = el("div"), grid = el("div", "p-kinds");
+  if (ov) {
+    colB.append(el("h3", null, "Areas"), grid);
+    AREAS.forEach(a => {
+      const c = countOf(a), sw = el("i", "p-sw");
+      sw.style.background = c ? gradient(a.color) : "#eef2f6";
+      if (!c) sw.style.border = "1px dashed #9aa8b8";
+      grid.appendChild(legendRow(sw, a.label, c ? `${plural(c.systems, "system")} · ${plural(c.links, "connection")}` : "Not mapped yet"));
+    });
+  } else {
+    const kinds = new Set(vis.map(n => n.kind));
+    colB.append(el("h3", null, "System types"), grid);
+    Object.keys(KIND_INFO).filter(k => kinds.has(k)).forEach(k => grid.appendChild(legendRow(kindSwatch(k), KIND_INFO[k][0], KIND_INFO[k][1])));
+  }
   const colC = el("div"), notes = el("ul", "p-notes"); colC.append(el("h3", null, "Reading the map"), notes);
-  [
+  (ov ? [
+    "Each tile is an area of the bank, around the core at the centre.",
+    "Lines show only that an area exchanges data with the core, not individual integrations.",
+    "Dashed tiles mark areas that are not mapped yet.",
+    ...(mappedAreas.length ? [`Systems in ${mappedAreas.map(a => a.label).join(", ")} are listed on the following pages.`] : [])
+  ] : [
     "Shaded panels group systems by business unit.",
     "Coloured icons mark each unit's main platform; tags such as HUB and CORE name its role.",
     "Arrows on one-way lines show the direction data moves.",
     "A vendor used by two units appears once in each unit.",
+    ...(vis.some(n => n.portal) ? ["Dashed systems belong to another area, named on their tag."] : []),
     ...(unitNames.length && vis.some(n => n.el.classList.contains("ghost")) ? ["Faded systems sit outside the selected units but connect to them."] : []),
     "System details and connections are listed on the following pages."
-  ].forEach(t => notes.appendChild(el("li", null, t)));
+  ]).forEach(t => notes.appendChild(el("li", null, t)));
   legend.append(colA, colB, colC);
-  page1.append(header(), map, legend, footer("Map and legend"));
+  page1.append(header(), map, legend, printFooter(view.title, ov ? "Overview and legend" : "Map and legend"));
   sheet.appendChild(page1);
 
-  // Following pages: systems directory grouped by business unit
-  const page2 = el("section", "p-page p-dir");
-  const dh = el("div", "p-head"), dt = el("div");
-  dt.append(el("div", "p-eyebrow", "Integration Atlas · Lending technology map"), el("h2", null, "Systems directory"));
-  dh.append(dt, el("div", "p-meta", date));
-  page2.appendChild(dh);
-  const ARROW = { both:"↔", none:"○", inactive:"⋯" };
-  [...UNITS].sort((a, b) => CONTEXT_UNITS.includes(b.id) - CONTEXT_UNITS.includes(a.id)).forEach(u => {
-    const group = vis.filter(n => n.units[0] === u.id).sort((a, b) => (a.kind === "integration") - (b.kind === "integration"));
-    if (!group.length) return;
-    const sec = el("div", "p-unit"), h = el("h3"), dot = el("i"), table = el("table"), body = el("tbody");
-    dot.style.background = u.color;
-    h.append(dot, u.label);
-    group.forEach(n => {
-      const tr = el("tr"), sys = el("div", `p-sys k-${n.kind}`), names = el("div"), conns = el("td");
-      const icon = el("div", "node-icon", n.icon);
-      names.append(el("b", null, n.name), el("small", null, n.tag ? `${n.type} · ${n.tag}` : n.type));
-      sys.append(icon, names);
-      const td1 = el("td"); td1.appendChild(sys);
-      connectionsOf(n.id).filter(c => visIds.has(c.other.id) && visEdges.includes(c.edge)).forEach(c => {
-        const row = el("span", "p-conn"), arrow = el("em", null, c.edge.flow === "one" ? (c.edge.from === n.id ? "→" : "←") : ARROW[c.edge.flow]);
-        arrow.style.color = printColor(c.edge);
-        const extra = [c.edge.manual && "manual", c.edge.flow === "inactive" && "not active"].filter(Boolean).join(", ");
-        row.append(arrow, c.other.name + (extra ? ` (${extra})` : ""));
-        conns.appendChild(row);
-      });
-      if (!conns.childNodes.length) conns.textContent = "No integrations";
-      tr.append(td1, el("td", null, n.desc), conns);
-      body.appendChild(tr);
-    });
-    table.appendChild(body);
-    sec.append(h, table);
-    page2.appendChild(sec);
-  });
-  page2.appendChild(footer("Systems directory"));
-  sheet.appendChild(page2);
+  // Following pages: systems directory (from the overview, one per mapped area)
+  if (ov) mappedAreas.forEach(a => { const v = views[a.id]; sheet.appendChild(directory(v, v.nodes.filter(n => !n.portal), v.edges, date, `${a.label} systems directory`)); });
+  else sheet.appendChild(directory(view, vis, visEdges, date, "Systems directory"));
 }
 
 $("print").addEventListener("click", () => window.print());
 window.addEventListener("beforeprint", buildPrint);
+window.addEventListener("afterprint", () => { if (view.id === "overview" && view.compact !== compactQuery.matches) { layoutOverview(view, compactQuery.matches); refreshGeometry(); } });
 
 /* ---------- starfield ---------- */
 const sc = $("stars"), ctx = sc.getContext("2d");
@@ -1133,17 +1577,15 @@ function starLoop(t) { drawStars(t); requestAnimationFrame(starLoop); }
 let resizeRaf = 0;
 window.addEventListener("resize", () => {
   cancelAnimationFrame(resizeRaf);
-  resizeRaf = requestAnimationFrame(() => { computeFit(); applyView(false); resizeStars(); });
+  resizeRaf = requestAnimationFrame(() => {
+    if (view.id === "overview" && view.compact !== compactQuery.matches) { layoutOverview(view, compactQuery.matches); refreshGeometry(); zoom = 1; tx = ty = 0; }
+    computeFit(); applyView(false); resizeStars();
+  });
 });
 
-NODES.forEach(placeNode);
-placeOrbits();
-updateEdges();
-computeFit();
-applyView(false);
-const hashUnits = (location.hash.match(/units=([\w,]+)/) || [])[1];
-if (hashUnits) hashUnits.split(",").forEach(u => { if (UNITS.some(x => x.id === u)) activeUnits.add(u); });
-applyFilter(!!activeUnits.size);
+AREAS.filter(mapped).forEach(a => { views[a.id] = buildView(areaView(a)); });
+views.overview = buildView(overviewView());
+route();
 resizeStars();
 if (!reduceMotion) { requestAnimationFrame(tick); requestAnimationFrame(starLoop); }
 })();

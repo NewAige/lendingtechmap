@@ -446,7 +446,7 @@ const LENDING = {
 LENDING.nodes = [
   // ── Core banking (centre) ──
   { id:"cocc",        name:"COCC",             type:"Bank core",          tag:"CORE",    icon:"CO", kind:"core", unit:"core",
-    x:1120, y:420,  desc:"Core banking platform and system of record for the bank. Sends a one-way data dump to Global Wave. Has no connection to VeraPath yet, but an OpenAPI connection is available and could be leveraged, since VeraPath accepts API connections." },
+    x:1120, y:420,  desc:"Core banking platform and system of record for the bank. Sends a one-way data dump to Global Wave. Sends payoff data one-way to DealerTrack Tech and RouteOne (automated), and receives dealer ACH fundings from DecisionLender through a manual process (automation planned via a NACHA file transmit). Has no connection to VeraPath yet, but an OpenAPI connection is available and could be leveraged, since VeraPath accepts API connections." },
   { id:"identifi",    name:"iDentifi",         type:"Cold storage",       tag:"ARCHIVE", icon:"iD", kind:"storage", unit:"core",
     x:1330, y:515,  desc:"Cold storage. Receives data from Encompass and Numerated, receives DecisionLender data through a manual process, receives closing documents from LoanWriter, receives LaserPro documents through manual imaging and LoanWriter application documents through a manual process, and exchanges data with COCC." },
 
@@ -476,17 +476,17 @@ LENDING.nodes = [
 
   // ── Indirect lending (below core) ──
   { id:"decisionlender", name:"DecisionLender", type:"Indirect hub",     tag:"HUB",     icon:"DL", kind:"indirect", unit:"indirect",
-    x:1120, y:765,  desc:"Indirect lending hub. Exchanges data with DealerTrack Tech and RouteOne, receives credit data from Experian, Equifax and TransUnion, sends data one-way to iDentifi through a manual process, has no connection to VeraPath yet but an OpenAPI connection is available that could be leveraged (VeraPath accepts API connections), and sends data one-way to its LenderLink instance, which passes it on to COCC." },
+    x:1120, y:765,  desc:"Indirect lending hub. Exchanges data with DealerTrack Tech and RouteOne, receives credit data from TransUnion (first pass) with Experian and Equifax as backups, sends dealer ACH fundings to COCC through a manual process (automation planned via a NACHA file transmit), sends data one-way to iDentifi through a manual process, has no connection to VeraPath yet but an OpenAPI connection is available that could be leveraged (VeraPath accepts API connections), and sends data one-way to its LenderLink instance, which passes it on to COCC." },
   { id:"dealertrack",    name:"DealerTrack Tech", type:"Dealer platform", icon:"DT", kind:"integration", unit:"indirect",
-    x:890, y:660,   desc:"Dealer platform. Exchanges data with DecisionLender (bidirectional)." },
+    x:890, y:660,   desc:"Dealer platform. Exchanges data with DecisionLender (bidirectional), and receives payoff data from COCC (one-way, automated)." },
   { id:"routeone",       name:"RouteOne",       type:"Dealer platform",   icon:"R1", kind:"integration", unit:"indirect",
-    x:1350, y:660,  desc:"Dealer platform. Exchanges data with DecisionLender (bidirectional)." },
+    x:1350, y:660,  desc:"Dealer platform. Exchanges data with DecisionLender (bidirectional), and receives payoff data from COCC (one-way, automated)." },
   { id:"experian",       name:"Experian",       type:"Credit bureau",     icon:"EX", kind:"integration", unit:"indirect",
-    x:890, y:870,   desc:"Sends data to DecisionLender (one-way)." },
+    x:890, y:870,   desc:"Backup credit bureau for indirect lending (TransUnion is the first pass). Sends data to DecisionLender (one-way)." },
   { id:"equifax",        name:"Equifax",        type:"Credit bureau",     icon:"EQ", kind:"integration", unit:"indirect",
-    x:1120, y:870,  desc:"Sends data to DecisionLender (one-way)." },
+    x:1120, y:870,  desc:"Backup credit bureau for indirect lending (TransUnion is the first pass). Sends data to DecisionLender (one-way)." },
   { id:"transunioni",    name:"TransUnion",     type:"Credit bureau",     icon:"TU", kind:"integration", unit:"indirect",
-    x:1350, y:870,  desc:"Sends data to DecisionLender (one-way). Shown separately from the consumer lending TransUnion connection." },
+    x:1350, y:870,  desc:"First-pass credit bureau for indirect lending; Experian and Equifax are the backups. Sends data to DecisionLender (one-way). Shown separately from the consumer lending TransUnion connection." },
   { id:"lenderlinki", name:"LenderLink",       type:"Middleware · indirect", icon:"LL", kind:"integration", unit:"indirect",
     x:1120, y:660,  desc:"Indirect lending's LenderLink instance (separate from commercial). Carries DecisionLender data into COCC (one-way)." },
 
@@ -565,10 +565,13 @@ LENDING.edges = [
   { from:"decisionlender", to:"lenderlinki", flow:"one" },
   { from:"dealertrack",    to:"decisionlender", flow:"both" },
   { from:"routeone",       to:"decisionlender", flow:"both" },
-  { from:"experian",       to:"decisionlender", flow:"one" },
-  { from:"equifax",        to:"decisionlender", flow:"one" },
-  { from:"transunioni",    to:"decisionlender", flow:"one" },
+  { from:"experian",       to:"decisionlender", flow:"one", note:"Backup bureau" },
+  { from:"equifax",        to:"decisionlender", flow:"one", note:"Backup bureau" },
+  { from:"transunioni",    to:"decisionlender", flow:"one", note:"First pass" },
   { from:"lenderlinki",    to:"cocc",        flow:"one" },
+  { from:"cocc",           to:"dealertrack", flow:"one", note:"Payoffs (automated)" },
+  { from:"cocc",           to:"routeone",    flow:"one", note:"Payoffs (automated)" },
+  { from:"decisionlender", to:"cocc",        flow:"one", manual:true, note:"Dealer ACH fundings · automation planned via NACHA file transmit", c1:[-200, -120], c2:[-200, 120] },
 
   { from:"xactusc",        to:"globalwave",  flow:"one",  manual:true, note:"Credit reports & flood certs" },
   { from:"globalwave",     to:"valuelinkc",  flow:"both", manual:true, note:"Appraisal management" },
